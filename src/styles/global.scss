@@ -1,0 +1,7 @@
+@import 'variable';
+@import 'mixins';
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: $primary-color;
+}

@@ -20,7 +20,7 @@
     "@microsoft/sp-office-ui-fabric-core": "1.21.1",
     "@microsoft/sp-property-pane": "1.21.1",
     "@microsoft/sp-webpart-base": "1.21.1",
-    "@pnp/sp": "^4.13.0",
+    "@pnp/sp": "4.13.0",
     "antd": "^5.25.3",
     "dayjs": "^1.11.13",
     "react": "17.0.1",

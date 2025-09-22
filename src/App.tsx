@@ -1,5 +1,5 @@
 import * as React from 'react';
-
+import 'antd/dist/reset.css';
 import './App.module.scss'
 import AppRouter from './AppRouter'
 

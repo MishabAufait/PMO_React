@@ -1,7 +1,12 @@
 @import './styles/global.scss';
 
-html, body, #workbenchPageContent, #spPageCanvasContent, .CanvasZone, .ControlZone, .ControlZone--control, .ControlZone--canvas, .CanvasSection {
+html, body {
   height: 100%;
+}
+
+#workbenchPageContent, #spPageCanvasContent, .CanvasZone, .ControlZone, .ControlZone--control, .ControlZone--canvas, .CanvasSection {
+  height: auto;
+  overflow: visible;
 }
 
 body {

@@ -1,8 +1,8 @@
 @import '~@fluentui/react/dist/sass/References.scss';
 
 .pmoWebpart {
-  overflow: hidden;
-  padding: 1em;
+  overflow: visible;
+  padding: 0;
   color: "[theme:bodyText, default: #323130]";
   color: var(--bodyText);
   &.teams {

@@ -44,3 +44,39 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
   }
 };
 
+
+export interface CreateProjectPayload {
+  ProjectCode: string;
+  ProjectOwner?: string;
+  ProjectName: string;
+  Division?: string;
+  ProjectType?: string;
+  AccountName?: string;
+  Region?: string;
+  ProjectStartDate?: string; // ISO string
+  ProjectEndDate?: string;   // ISO string
+  EstimatedBudget?: number;
+  POValue?: number;
+}
+
+export const createProject = async (sp: SPFI, libraryName: string, payload: CreateProjectPayload) => {
+  try {
+    const list = sp.web.lists.getByTitle(libraryName);
+    const result = await list.items.add({
+      ProjectCode: payload.ProjectCode,
+      ProjectOwner: payload.ProjectOwner ?? '',
+      ProjectName: payload.ProjectName,
+      Division: payload.Division ?? '',
+      ProjectType: payload.ProjectType ?? '',
+      AccountName: payload.AccountName ?? '',
+      Region: payload.Region ?? '',
+      ProjectStartDate: payload.ProjectStartDate ?? null,
+      ProjectEndDate: payload.ProjectEndDate ?? null,
+      EstimatedBudget: payload.EstimatedBudget ?? null,
+      POValue: payload.POValue ?? null,
+    });
+    return result?.data;
+  } catch (err) {
+    logAndRethrow(err, 'createProject');
+  }
+};

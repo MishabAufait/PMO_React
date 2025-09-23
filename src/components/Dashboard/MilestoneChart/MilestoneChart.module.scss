@@ -1,0 +1,91 @@
+.milestoneCard {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  
+  :global(.ant-card-head) {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 20px;
+  }
+  
+  :global(.ant-card-body) {
+    padding: 20px;
+  }
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.dateDropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  padding: 4px 12px;
+  
+  &:hover {
+    border-color: #1677ff;
+  }
+}
+
+.chartContainer {
+  display: flex;
+  gap: 16px;
+  height: 200px;
+}
+
+.chartYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: right;
+  min-width: 30px;
+}
+
+.chartBars {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex: 1;
+}
+
+.chartBarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+}
+
+.chartBar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  min-height: 20px;
+}
+
+.barValue {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1677ff;
+  white-space: nowrap;
+}
+
+.barLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
+  text-align: center;
+  word-break: break-word;
+}

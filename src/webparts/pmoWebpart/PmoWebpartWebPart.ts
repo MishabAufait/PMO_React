@@ -1,92 +1,65 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
-import {
-  type IPropertyPaneConfiguration,
-  PropertyPaneTextField
-} from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-import { IReadonlyTheme } from '@microsoft/sp-component-base';
+import { App } from '../../App';
+import { spfi, SPFx } from "@pnp/sp";
+import { IAppProps } from '../../IAppProps';
+import { SPComponentLoader } from '@microsoft/sp-loader';
+import { initializeIcons } from '@fluentui/react/lib/Icons';
+import { dev_css_url } from '../../utils/constants';
 
-import * as strings from 'PmoWebpartWebPartStrings';
-import PmoWebpart from './components/PmoWebpart';
-import { IPmoWebpartProps } from './components/IPmoWebpartProps';
 
-export interface IPmoWebpartWebPartProps {
+export interface IErmsMainWebPartProps {
   description: string;
 }
 
-export default class PmoWebpartWebPart extends BaseClientSideWebPart<IPmoWebpartWebPartProps> {
+export default class ErmsMainWebPart extends BaseClientSideWebPart<IErmsMainWebPartProps> {
 
-  private _isDarkTheme: boolean = false;
-  private _environmentMessage: string = '';
+  private _sp: ReturnType<typeof spfi>;
 
-  public render(): void {
-    const element: React.ReactElement<IPmoWebpartProps> = React.createElement(
-      PmoWebpart,
-      {
-        description: this.properties.description,
-        isDarkTheme: this._isDarkTheme,
-        environmentMessage: this._environmentMessage,
-        hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
-      }
-    );
+  public onInit(): Promise<void> {
+    // ✅ Set favicon
+    const head = document.getElementsByTagName("head")[0];
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/x-icon";
+    // link.href = `${defaultTenantUrl}/sites/${Site_Name}/SiteAssets/favicon.ico`;
+    head.appendChild(link);
 
-    ReactDom.render(element, this.domElement);
-  }
+    return super.onInit().then(_ => {
+      // ✅ Initialize Fluent UI icons
+      initializeIcons();
 
-  protected onInit(): Promise<void> {
-    return this._getEnvironmentMessage().then(message => {
-      this._environmentMessage = message;
+      // ✅ Load Google Outfit font
+      SPComponentLoader.loadCss("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+      // ✅ Load custom dev CSS
+      SPComponentLoader.loadCss(`${this.context.pageContext.site.absoluteUrl}${dev_css_url}`);
+
+      // ✅ Setup PnPjs with SPFx context
+      this._sp = spfi().using(SPFx(this.context));
     });
   }
 
+  public render(): void {
+    try {
+      const element: React.ReactElement<IAppProps> = React.createElement(App, {
+        sp: this._sp,
+        context: this.context
+      });
 
-
-  private _getEnvironmentMessage(): Promise<string> {
-    if (!!this.context.sdks.microsoftTeams) { // running in Teams, office.com or Outlook
-      return this.context.sdks.microsoftTeams.teamsJs.app.getContext()
-        .then(context => {
-          let environmentMessage: string = '';
-          switch (context.app.host.name) {
-            case 'Office': // running in Office
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOffice : strings.AppOfficeEnvironment;
-              break;
-            case 'Outlook': // running in Outlook
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentOutlook : strings.AppOutlookEnvironment;
-              break;
-            case 'Teams': // running in Teams
-            case 'TeamsModern':
-              environmentMessage = this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentTeams : strings.AppTeamsTabEnvironment;
-              break;
-            default:
-              environmentMessage = strings.UnknownEnvironment;
-          }
-
-          return environmentMessage;
-        });
+      ReactDom.render(element, this.domElement);
+    } catch (error: any) {
+      console.error('Error rendering web part:', error);
+      this.domElement.innerHTML = `
+        <div style="padding: 20px; border: 1px solid #dc3545; background: #f8d7da; color: #721c24; border-radius: 4px;">
+          <h3>Web Part Loading Error</h3>
+          <p>There was an issue loading the web part content.</p>
+          <small>Error: ${error.message || 'Unknown error occurred'}</small>
+        </div>
+      `;
     }
-
-    return Promise.resolve(this.context.isServedFromLocalhost ? strings.AppLocalEnvironmentSharePoint : strings.AppSharePointEnvironment);
-  }
-
-  protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {
-    if (!currentTheme) {
-      return;
-    }
-
-    this._isDarkTheme = !!currentTheme.isInverted;
-    const {
-      semanticColors
-    } = currentTheme;
-
-    if (semanticColors) {
-      this.domElement.style.setProperty('--bodyText', semanticColors.bodyText || null);
-      this.domElement.style.setProperty('--link', semanticColors.link || null);
-      this.domElement.style.setProperty('--linkHovered', semanticColors.linkHovered || null);
-    }
-
   }
 
   protected onDispose(): void {
@@ -95,27 +68,5 @@ export default class PmoWebpartWebPart extends BaseClientSideWebPart<IPmoWebpart
 
   protected get dataVersion(): Version {
     return Version.parse('1.0');
-  }
-
-  protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
-    return {
-      pages: [
-        {
-          header: {
-            description: strings.PropertyPaneDescription
-          },
-          groups: [
-            {
-              groupName: strings.BasicGroupName,
-              groupFields: [
-                PropertyPaneTextField('description', {
-                  label: strings.DescriptionFieldLabel
-                })
-              ]
-            }
-          ]
-        }
-      ]
-    };
   }
 }

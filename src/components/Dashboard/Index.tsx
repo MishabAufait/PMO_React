@@ -1,5 +1,5 @@
 import * as React from 'react'
-import styles from './Dashboard.module.scss'
+import './Dashboard.scss'
 
 // Import individual components
 import SummaryCards from './SummaryCards/Index'
@@ -9,12 +9,12 @@ import ProjectsTable from './ProjectsTable/Index'
 
 export default function ModernDashboard() {
   return (
-    <div className={styles.dashboard}>
+    <div className="dashboard">
       {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.welcomeSection}>
-          <h1 className={styles.welcomeTitle}>Hello, Jane Doe!!</h1>
-          <p className={styles.welcomeSubtitle}>Welcome, Let's get back to work.</p>
+      <div className="header">
+        <div className="welcomeSection">
+          <h1 className="welcomeTitle">Hello, Jane Doe!!</h1>
+          <p className="welcomeSubtitle">Welcome, Let's get back to work.</p>
         </div>
       </div>
 
@@ -22,7 +22,7 @@ export default function ModernDashboard() {
       <SummaryCards />
 
       {/* Main Content Grid */}
-      <div className={styles.mainGrid}>
+      <div className="mainGrid">
         {/* Upcoming Milestone Chart */}
         <MilestoneChart />
 

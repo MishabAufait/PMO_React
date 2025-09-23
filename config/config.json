@@ -13,6 +13,7 @@
   },
   "externals": {},
   "localizedResources": {
-    "PmoWebpartWebPartStrings": "lib/webparts/pmoWebpart/loc/{locale}.js"
+    "PmoWebpartWebPartStrings": "lib/webparts/pmoWebpart/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

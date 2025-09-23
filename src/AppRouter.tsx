@@ -4,6 +4,8 @@ import { RouterProvider, Outlet, createHashRouter } from 'react-router-dom'
 // Layout & Pages
 import Layout from './components/Layout/Index'
 import ModernDashboard from './components/Dashboard/Index'
+import ProjectDetails from './components/Detail Page/Index'
+
 
 export default function AppRouter() {
   const routes = [
@@ -11,6 +13,7 @@ export default function AppRouter() {
       element: <Layout><Outlet /></Layout>,
       children: [
         { path: '/', element: <ModernDashboard /> },
+        { path: '/details/:projectId', element: <ProjectDetails projectId={1}/> },
       ],
     },
   ]

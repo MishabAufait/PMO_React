@@ -1,294 +1,373 @@
-import * as React from 'react';
-import { useState } from 'react';
-import { Table, Tag, Progress, Button, Select } from 'antd';
-import CreateProjectModal from './CreateProjectModal';
-import type { ColumnsType } from 'antd/es/table';
-import './Dashboard.scss';
+import * as React from 'react'
+import styles from './Dashboard.module.scss'
+import { Card, Button, Table, Tag, Avatar, Progress, Dropdown, Input } from 'antd'
+import { 
+  SearchOutlined, 
+  FilterOutlined, 
+  MoreOutlined, 
+  PlusOutlined,
+  CheckOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  GlobalOutlined,
+  FileTextOutlined,
+  CalendarOutlined
+} from '@ant-design/icons'
 
-const kpiItems = [
-  { title: 'Total Projects', value: 50, color: '#3b82f6', bgColor: '#eff6ff', icon: '📊' },
-  { title: 'Completed', value: 26, color: '#10b981', bgColor: '#ecfdf5', icon: '✅' },
-  { title: 'In Progress', value: 20, color: '#f59e0b', bgColor: '#fffbeb', icon: '⏳' },
-  { title: 'Delayed projects', value: 4, color: '#ef4444', bgColor: '#fef2f2', icon: '⚠️' },
-];
+const { Search } = Input
 
+// Project summary data
+const summaryData = [
+  { 
+    title: 'Total Projects', 
+    value: 50, 
+    icon: <GlobalOutlined />, 
+    color: '#1677ff',
+    progress: 100
+  },
+  { 
+    title: 'Completed', 
+    value: 26, 
+    icon: <CheckOutlined />, 
+    color: '#52c41a',
+    progress: 52
+  },
+  { 
+    title: 'In Progress', 
+    value: 20, 
+    icon: <ClockCircleOutlined />, 
+    color: '#1677ff',
+    progress: 40
+  },
+  { 
+    title: 'Delayed projects', 
+    value: 4, 
+    icon: <ExclamationCircleOutlined />, 
+    color: '#ff4d4f',
+    progress: 8
+  },
+]
+
+// Milestone chart data
+const milestoneData = [
+  { name: 'MBFSL', amount: 1.2 },
+  { name: 'Etihad Airways', amount: 3.25 },
+  { name: 'TTL', amount: 2.5 },
+  { name: 'KTPL', amount: 1.8 },
+  { name: 'MPPL', amount: 2.1 },
+  { name: 'PSPL', amount: 1.5 },
+]
+
+// Notifications data
 const notifications = [
-  { 
-    id: 1,
-    title: 'Payment Confirmation', 
-    time: '1hr ago', 
-    text: 'AMC renewal payment of ₹58,000 from Kalki Tech Private Limited.',
-    type: 'payment',
-    unread: true
+  {
+    icon: <FileTextOutlined />,
+    title: 'Payment Confirmation',
+    message: 'We have received the AMC renewal payment of ₹58,000 from Kalki Tech Private Limited.',
+    time: '11hr ago'
   },
-  { 
-    id: 2,
-    title: 'Lease Renewal Reminder', 
-    time: '1hr ago', 
-    text: 'Mrs. Bector\'s Food Specialities Ltd lease is set to expire on August 23, 2025.',
-    type: 'reminder',
-    unread: true
-  },
-];
+  {
+    icon: <CalendarOutlined />,
+    title: 'Lease Renewal Remainder',
+    message: 'The lease for Mrs. Bector\'s Food Specialities Ltd is set to expire on August 23, 2025. Please take appropriate action to initiate lease renewal discussions.',
+    time: '1hr ago'
+  }
+]
 
-const tableData = [
-  { 
-    id: 1, 
-    name: 'Mrs. Bector\'s Food Specialities Private Limited', 
-    status: 'Ongoing', 
-    amount: '₹320.3K', 
-    milestonePct: 60, 
-    milestoneStatus: 'On track', 
-    start: '21/03/2024', 
-    end: '14/05/2024' 
+// Projects table data
+const projectsData = [
+  {
+    key: 1,
+    name: 'Mrs. Bector\'s Food Specialities Private Limited',
+    initial: 'M',
+    status: 'Ongoing',
+    amount: '₹320.30K',
+    milestonePct: '60%',
+    milestoneStatus: 'On track',
+    startDate: '21/03/2024',
+    endDate: '14/05/2024'
   },
-  { 
-    id: 2, 
-    name: 'Etihad Airways Aviation Group', 
-    status: 'Ongoing', 
-    amount: '₹120.3K', 
-    milestonePct: 58, 
-    milestoneStatus: 'On track', 
-    start: '17/05/2024', 
-    end: '07/08/2024' 
+  {
+    key: 2,
+    name: 'Etihad Airways Aviation Group',
+    initial: 'E',
+    status: 'Ongoing',
+    amount: '₹120.30K',
+    milestonePct: '58%',
+    milestoneStatus: 'On track',
+    startDate: '17/05/2024',
+    endDate: '07/08/2024'
   },
-  { 
-    id: 3, 
-    name: 'Triveni Turbines Private Limited', 
-    status: 'Ongoing', 
-    amount: '₹420.3K', 
-    milestonePct: 35, 
-    milestoneStatus: 'Delayed', 
-    start: '20/01/2025', 
-    end: '04/03/2025' 
+  {
+    key: 3,
+    name: 'Triveni Turbines Private Limited',
+    initial: 'T',
+    status: 'Ongoing',
+    amount: '₹420.30K',
+    milestonePct: '35%',
+    milestoneStatus: 'Delayed',
+    startDate: '20/01/2025',
+    endDate: '04/03/2025'
   },
-  { 
-    id: 4, 
-    name: 'Kalki Tech Private Limited', 
-    status: 'Completed', 
-    amount: '₹370.3K', 
-    milestonePct: 100, 
-    milestoneStatus: 'Completed', 
-    start: '10/02/2025', 
-    end: '10/04/2025' 
+  {
+    key: 4,
+    name: 'Kalki Tech Private Limited',
+    initial: 'K',
+    status: 'Completed',
+    amount: '₹370.30K',
+    milestonePct: '100%',
+    milestoneStatus: 'Completed',
+    startDate: '10/02/2025',
+    endDate: '10/04/2025'
   },
-];
+  {
+    key: 5,
+    name: 'Madhyamam',
+    initial: 'M',
+    status: 'Upcoming',
+    amount: '₹415.30K',
+    milestonePct: '0%',
+    milestoneStatus: 'Pending',
+    startDate: '17/02/2025',
+    endDate: '10/08/2025'
+  },
+  {
+    key: 6,
+    name: 'Pierian Services',
+    initial: 'P',
+    status: 'Upcoming',
+    amount: '₹110.30K',
+    milestonePct: '0%',
+    milestoneStatus: 'Pending',
+    startDate: '26/03/2025',
+    endDate: '10/11/2025'
+  }
+]
 
-// Mock chart data
-const chartData = [
-  { name: 'MFSSL', value: 4.5, color: '#3b82f6' },
-  { name: 'Etihad Airways', value: 2.2, color: '#10b981' },
-  { name: 'ITTL', value: 2.8, color: '#f59e0b' },
-  { name: 'KTPL', value: 0, color: '#6b7280' },
-  { name: 'MFPL', value: 4.5, color: '#8b5cf6' },
-  { name: 'PSPL', value: 0, color: '#ec4899' },
-];
+// Table columns
+const columns = [
+  {
+    title: '',
+    dataIndex: 'checkbox',
+    key: 'checkbox',
+    width: 50,
+    render: () => <input type="checkbox" />
+  },
+  {
+    title: 'Projects',
+    dataIndex: 'name',
+    key: 'name',
+    width: 300,
+    render: (text: string, record: any) => (
+      <div className={styles.projectCell}>
+        <Avatar size="small" style={{ backgroundColor: '#1677ff' }}>
+          {record.initial}
+        </Avatar>
+        <span className={styles.projectName}>{text}</span>
+      </div>
+    )
+  },
+  {
+    title: 'Project Status',
+    dataIndex: 'status',
+    key: 'status',
+    width: 120,
+    render: (status: string) => (
+      <Tag color={
+        status === 'Completed' ? 'green' :
+        status === 'Ongoing' ? 'blue' :
+        status === 'Upcoming' ? 'orange' : 'default'
+      }>
+        {status}
+      </Tag>
+    )
+  },
+  {
+    title: 'Amount',
+    dataIndex: 'amount',
+    key: 'amount',
+    width: 100
+  },
+  {
+    title: 'Milestone Percentage',
+    dataIndex: 'milestonePct',
+    key: 'milestonePct',
+    width: 150
+  },
+  {
+    title: 'Milestone Status',
+    dataIndex: 'milestoneStatus',
+    key: 'milestoneStatus',
+    width: 130,
+    render: (status: string) => (
+      <Tag color={
+        status === 'Completed' ? 'blue' :
+        status === 'On track' ? 'green' :
+        status === 'Delayed' ? 'red' :
+        status === 'Pending' ? 'orange' : 'default'
+      }>
+        {status}
+      </Tag>
+    )
+  },
+  {
+    title: 'Project Start Date',
+    dataIndex: 'startDate',
+    key: 'startDate',
+    width: 130
+  },
+  {
+    title: 'Project End Date',
+    dataIndex: 'endDate',
+    key: 'endDate',
+    width: 130
+  },
+  {
+    title: '',
+    key: 'actions',
+    width: 50,
+    render: () => <MoreOutlined />
+  }
+]
 
 export default function ModernDashboard() {
-  const [selectedFilter, setSelectedFilter] = useState('Aug 2025');
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed': return '#10b981';
-      case 'Ongoing': return '#f59e0b';
-      case 'Delayed': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const getMilestoneColor = (status: string) => {
-    switch (status) {
-      case 'Completed': return '#3b82f6';
-      case 'On track': return '#10b981';
-      case 'Delayed': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  const columns: ColumnsType<any> = [
-    {
-      title: 'Projects',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text: string, record: any) => (
-        <div className="project-name">
-          <div className="project-avatar">{record.name.split(' ').map((w: string) => w[0]).slice(0,2).join('')}</div>
-          <span>{text}</span>
-        </div>
-      )
-    },
-    {
-      title: 'Project Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)} style={{ border: 0, backgroundColor: `${getStatusColor(status)}20`, color: getStatusColor(status) }}>{status}</Tag>
-      )
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
-      align: 'right' as const
-    },
-    {
-      title: 'Milestone %',
-      dataIndex: 'milestonePct',
-      key: 'milestonePct',
-      render: (pct: number, record: any) => (
-        <div className="progress-cell">
-          <Progress percent={pct} size="small" showInfo={false} strokeColor={getMilestoneColor(record.milestoneStatus)} />
-          <span>{pct}%</span>
-        </div>
-      )
-    },
-    {
-      title: 'Milestone Status',
-      dataIndex: 'milestoneStatus',
-      key: 'milestoneStatus',
-      render: (status: string) => (
-        <Tag color={getMilestoneColor(status)} style={{ border: 0, backgroundColor: `${getMilestoneColor(status)}20`, color: getMilestoneColor(status) }}>{status}</Tag>
-      )
-    },
-    {
-      title: 'Start Date',
-      dataIndex: 'start',
-      key: 'start'
-    },
-    {
-      title: 'End Date',
-      dataIndex: 'end',
-      key: 'end'
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: () => (
-        <Button type="text">•••</Button>
-      )
-    }
-  ];
-
-  const [modalOpen, setModalOpen] = useState(false);
-
   return (
-    <div className="dashboard">
+    <div className={styles.dashboard}>
       {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div className="greeting">
-            <h1 className="title">Hello, Jane Doe!! 👋</h1>
-            <p className="subtitle">Welcome, Let's get back to work.</p>
-          </div>
-          <button className="create-btn" onClick={() => setModalOpen(true)}>
-            <span>+</span>
-            Create project
-          </button>
+      <div className={styles.header}>
+        <div className={styles.welcomeSection}>
+          <h1 className={styles.welcomeTitle}>Hello, Jane Doe!!</h1>
+          <p className={styles.welcomeSubtitle}>Welcome, Let's get back to work.</p>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="kpi-grid">
-        {kpiItems.map((item, index) => (
-          <div key={item.title} className="kpi-card" style={{ backgroundColor: item.bgColor }}>
-            <div className="kpi-content">
-              <div className="kpi-header">
-                <span className="kpi-icon">{item.icon}</span>
-                <div className="kpi-trend">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M7 17L17 7M17 7H7M17 7V17" stroke={item.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
+      {/* Summary Cards */}
+      <div className={styles.summaryCards}>
+        {summaryData.map((item, index) => (
+          <Card key={index} className={styles.summaryCard}>
+            <div className={styles.summaryContent}>
+              <div className={styles.summaryIcon} style={{ color: item.color }}>
+                {item.icon}
               </div>
-              <div className="kpi-value" style={{ color: item.color }}>{item.value}</div>
-              <div className="kpi-title">{item.title}</div>
-              <div className="kpi-progress">
-                <div className="progress-bar" style={{ width: `${Math.round(Math.random() * 100)}%`, backgroundColor: item.color }}></div>
+              <div className={styles.summaryInfo}>
+                <div className={styles.summaryValue}>{item.value}</div>
+                <div className={styles.summaryTitle}>{item.title}</div>
+                <Progress 
+                  percent={item.progress} 
+                  showInfo={false} 
+                  strokeColor={item.color}
+                  className={styles.summaryProgress}
+                />
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Main Content Grid */}
-      <div className="content-grid">
-        {/* Chart Card */}
-        <div className="chart-card">
-          <div className="card-header">
-            <h3>Upcoming milestone</h3>
-          <div className="chart-filter">
-            <Select
-              value={selectedFilter}
-              onChange={(val) => setSelectedFilter(val)}
-              options={[{value:'Aug 2025', label:'Aug 2025'},{value:'Sep 2025', label:'Sep 2025'},{value:'Oct 2025', label:'Oct 2025'}]}
-              style={{ width: 140 }}
-            />
+      <div className={styles.mainGrid}>
+        {/* Upcoming Milestone Chart */}
+        <Card title="Upcoming milestone" className={styles.milestoneCard}>
+          <div className={styles.chartHeader}>
+            <Dropdown 
+              menu={{ items: [{ key: '1', label: 'Aug 2025' }] }}
+              trigger={['click']}
+            >
+              <Button className={styles.dateDropdown}>Aug 2025</Button>
+            </Dropdown>
           </div>
-          </div>
-          <div className="chart-container">
-            <div className="chart">
-              {chartData.map((item, index) => (
-                <div key={item.name} className="chart-bar">
+          <div className={styles.chartContainer}>
+            <div className={styles.chartYAxis}>
+              <div>5M</div>
+              <div>4M</div>
+              <div>3M</div>
+              <div>2M</div>
+              <div>1M</div>
+              <div>0</div>
+            </div>
+            <div className={styles.chartBars}>
+              {milestoneData.map((item, index) => (
+                <div key={index} className={styles.chartBarContainer}>
                   <div 
-                    className="bar" 
+                    className={styles.chartBar}
                     style={{ 
-                      height: `${item.value * 20}px`,
-                      backgroundColor: item.color,
-                      animationDelay: `${index * 0.1}s`
+                      height: `${(item.amount / 5) * 100}%`,
+                      backgroundColor: item.name === 'Etihad Airways' ? '#1677ff' : '#e6f7ff'
                     }}
-                  ></div>
-                  <span className="bar-label">{item.name}</span>
-                  {item.value > 0 && <span className="bar-value">{item.value}M</span>}
+                  >
+                    {item.name === 'Etihad Airways' && (
+                      <span className={styles.barValue}>{item.amount}M</span>
+                    )}
+                  </div>
+                  <div className={styles.barLabel}>{item.name}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Notifications */}
-        <div className="notifications-card">
-          <div className="card-header">
-            <h3>Notifications</h3>
-            <button className="mark-read-btn">Mark as read</button>
-          </div>
-          <div className="notifications-list">
-            {notifications.map((notification) => (
-              <div key={notification.id} className={`notification-item ${notification.unread ? 'unread' : ''}`}>
-                <div className="notification-icon">
-                  {notification.type === 'payment' ? '💰' : '📅'}
+        {/* Notifications Panel */}
+        <Card 
+          title="Notifications" 
+          className={styles.notificationsCard}
+          extra={<a className={styles.markAsRead}>✓ Mark as read</a>}
+        >
+          <div className={styles.notificationsSubtitle}>Today</div>
+          <div className={styles.notificationsList}>
+            {notifications.map((notification, index) => (
+              <div key={index} className={styles.notificationItem}>
+                <div className={styles.notificationIcon}>
+                  {notification.icon}
                 </div>
-                <div className="notification-content">
-                  <div className="notification-header">
-                    <h4>{notification.title}</h4>
-                    <span className="notification-time">{notification.time}</span>
+                <div className={styles.notificationContent}>
+                  <div className={styles.notificationTitle}>
+                    {notification.title}
                   </div>
-                  <p>{notification.text}</p>
+                  <div className={styles.notificationMessage}>
+                    {notification.message}
+                  </div>
+                  <div className={styles.notificationTime}>
+                    {notification.time}
+                  </div>
                 </div>
-                {notification.unread && <div className="unread-dot"></div>}
               </div>
             ))}
           </div>
-          <button className="see-all-btn">See all notifications</button>
-        </div>
+        </Card>
       </div>
 
       {/* Projects Table */}
-      <div className="projects-card">
-        <div className="card-header">
-          <h3>Projects</h3>
-          <div className="table-actions">
-            <Button icon={null}>Filter</Button>
-            <Button icon={null}>Search</Button>
+        <Card 
+        title={
+          <div className={styles.projectsHeader}>
+            <div>
+              <h3 className={styles.projectsTitle}>Projects</h3>
+              <p className={styles.projectsSubtitle}>All projects</p>
+            </div>
+            <div className={styles.projectsActions}>
+              <Button type="primary" icon={<PlusOutlined />}>
+                Create project
+              </Button>
+              <Search 
+                placeholder="Q Search" 
+                className={styles.searchInput}
+                prefix={<SearchOutlined />}
+              />
+              <Button icon={<FilterOutlined />} className={styles.filterButton} />
+              <Button icon={<MoreOutlined />} className={styles.moreButton} />
+            </div>
           </div>
-        </div>
+        }
+        className={styles.projectsCard}
+      >
         <Table
-          rowKey="id"
           columns={columns}
-          dataSource={tableData}
-          pagination={{ pageSize: 7, size: 'small' }}
+          dataSource={projectsData}
+          pagination={false}
+          scroll={{ x: true }}
+          className={styles.projectsTable}
         />
-      </div>
-      <CreateProjectModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={() => { /* TODO: refresh list */ }} />
+      </Card>
     </div>
-  );
+  )
 }

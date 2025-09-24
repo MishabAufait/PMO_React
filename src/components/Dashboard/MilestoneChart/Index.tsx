@@ -4,12 +4,12 @@ import { Card, Button, Dropdown } from 'antd'
 
 // Milestone chart data
 const milestoneData = [
-  { name: 'MBFSL', amount: 1.2 },
+  { name: 'MBFSL', amount: 1.1 },
   { name: 'Etihad Airways', amount: 3.25 },
-  { name: 'TTL', amount: 2.5 },
-  { name: 'KTPL', amount: 1.8 },
-  { name: 'MPPL', amount: 2.1 },
-  { name: 'PSPL', amount: 1.5 },
+  { name: 'TTL', amount: 2.4 },
+  { name: 'KTPL', amount: 0.1 },
+  { name: 'MPPL', amount: 0.1 },
+  { name: 'PSPL', amount: 0.1 },
 ]
 
 export default function MilestoneChart() {
@@ -39,11 +39,13 @@ export default function MilestoneChart() {
                 className={styles.chartBar}
                 style={{ 
                   height: `${(item.amount / 5) * 100}%`,
-                  backgroundColor: item.name === 'Etihad Airways' ? '#1677ff' : '#e6f7ff'
+                  backgroundColor: '#1677ff'
                 }}
               >
                 {item.name === 'Etihad Airways' && (
-                  <span className={styles.barValue}>{item.amount}M</span>
+                  <div className={styles.tooltip}>
+                    <span className={styles.tooltipValue}>₹{item.amount}M</span>
+                  </div>
                 )}
               </div>
               <div className={styles.barLabel}>{item.name}</div>

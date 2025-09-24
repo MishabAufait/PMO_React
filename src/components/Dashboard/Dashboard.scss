@@ -4,7 +4,31 @@
   gap: 24px;
   padding: 24px;
   background: #f6f7fb;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #9ca3af;
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 .header {
@@ -46,5 +70,8 @@
   .dashboard {
     padding: 16px;
     gap: 16px;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }

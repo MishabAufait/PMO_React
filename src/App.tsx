@@ -15,6 +15,10 @@ export const App: React.FC<IAppProps> = ({
   context
 }) => {
 
+    // Debug: Log to see what's actually being passed
+  console.log('App - sp:', sp);
+  console.log('App - context:', context);
+
   return (
     <spContext.Provider value={{sp, context}}>
       <AppRouter />

@@ -1,16 +1,142 @@
-.milestoneCard {
-  border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+.chartWrapper {
+  padding: 16px;
   border: 1px solid #e5e7eb;
-  
-  :global(.ant-card-head) {
-    border-bottom: 1px solid #e5e7eb;
-    padding: 16px 20px;
-  }
-  
-  :global(.ant-card-body) {
-    padding: 20px;
-  }
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chartContainer {
+  display: flex;
+  gap: 16px;
+  height: 250px; // ✅ fixed chart height
+  position: relative;
+}
+
+.yAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 8px;
+  color: #6b7280;
+  font-size: 12px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.chartBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  height: 100%; // ✅ fill full chart height
+  padding-bottom: 10px;
+}
+
+.chartBarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%; // ✅ full height
+  max-width: 80px;
+}
+
+.barGroup {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+  height: 100%; // ✅ full height for scaling
+  justify-content: center;
+}
+
+.bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 2px; // keeps visibility
+}
+
+.amountBar {
+  background: #3b82f6; // blue
+}
+
+.moduleAmountBar {
+  background: #22c55e; // green
+}
+
+.label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #374151;
+  text-align: center;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legendAmount {
+  background: #3b82f6;
+}
+
+.legendModule {
+  background: #22c55e;
+}
+
+.yAxis {
+  flex: none;
+  width: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 8px;
+  color: #6b7280;
+  font-size: 12px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.yAxisLabel {
+  text-align: right;
+  line-height: 1;
+}
+
+.milestoneCard {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .chartHeader {
@@ -20,60 +146,38 @@
 }
 
 .dateDropdown {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: white;
-  color: #374151;
   font-size: 14px;
-  padding: 4px 12px;
-  
-  &:hover {
-    border-color: #1677ff;
-  }
 }
 
 .chartContainer {
   display: flex;
   gap: 16px;
-  height: 200px;
+  height: 250px; // Fixed chart height
   position: relative;
-  
-  // Add grid lines
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 30px;
-    right: 0;
-    bottom: 0;
-    background-image: 
-      linear-gradient(to bottom, transparent 0%, transparent 19%, #e5e7eb 19%, #e5e7eb 20%, transparent 20%, transparent 39%, #e5e7eb 39%, #e5e7eb 40%, transparent 40%, transparent 59%, #e5e7eb 59%, #e5e7eb 60%, transparent 60%, transparent 79%, #e5e7eb 79%, #e5e7eb 80%, transparent 80%, transparent 99%, #e5e7eb 99%, #e5e7eb 100%);
-    background-size: 100% 20%;
-    pointer-events: none;
-    z-index: 1;
-  }
 }
 
 .chartYAxis {
+  flex: none;
+  width: 40px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 12px;
+  padding-right: 8px;
   color: #6b7280;
+  font-size: 12px;
+  border-right: 1px solid #e5e7eb;
   text-align: right;
-  min-width: 30px;
-  position: relative;
-  z-index: 2;
 }
 
 .chartBars {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
+  gap: 16px;
   flex: 1;
   position: relative;
   z-index: 2;
   height: 100%;
+  padding-bottom: 10px;
 }
 
 .chartBarContainer {
@@ -83,52 +187,86 @@
   justify-content: flex-end;
   flex: 1;
   height: 100%;
+  max-width: 80px;
+}
+
+.barGroup {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
 }
 
 .chartBar {
-  width: 100%;
+  flex: 1;
   border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 2px;
   position: relative;
-  transition: all 0.3s ease;
-  min-height: 4px;
-  background-color: #1677ff;
-  align-self: flex-end;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.tooltip {
+.amountBar {
+  background: #1677ff; // AntD blue
+}
+
+.moduleAmountBar {
+  background: #52c41a; // AntD green
+}
+
+.barValue {
   position: absolute;
-  top: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #000;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  bottom: 100%;
+  margin-bottom: 2px;
   white-space: nowrap;
-  z-index: 10;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #000;
-  }
-}
-
-.tooltipValue {
-  color: white;
+  color: #111827;
+  font-size: 10px;
   font-weight: 500;
 }
 
 .barLabel {
-  font-size: 12px;
-  color: #6b7280;
   margin-top: 8px;
+  font-size: 12px;
+  color: #374151;
   text-align: center;
-  word-break: break-word;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 70px;
 }
+
+.chartLegend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.noData {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+

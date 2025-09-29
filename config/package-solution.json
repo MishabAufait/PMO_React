@@ -32,6 +32,16 @@
         "id": "caaf1717-67b0-49e2-95b6-bb821424bea9",
         "version": "1.0.0.0"
       }
+    ],
+    "webApiPermissionRequests": [
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.ReadBasic.All"
+      },
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.Read.All"
+      }
     ]
   },
   "paths": {

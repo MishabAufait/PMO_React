@@ -73,7 +73,7 @@ export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, pr
 export interface CreateProjectPayload {
   ProjectName: string;
   ProjectId: string;
-  ProjectManager: number; // SharePoint Person field Id
+  ProjectManagerId: number; // SharePoint Person field Id
   ProjectStartDate?: string;
   ProjectEndDate?: string;
   ProjectManagerEMail?: string;
@@ -87,59 +87,22 @@ export interface CreateProjectPayload {
   InvoiceDate?: string;
 }
 
-export const createProject = async (
-  sp: SPFI,
-  libraryName: string,
-  payload: CreateProjectPayload
-) => {
-  try {
-    const list = sp.web.lists.getByTitle(libraryName);
-    const result = await list.items.add({
-      ProjectId: payload.ProjectId,
-      ProjectName: payload.ProjectName,
-      ProjectManager: payload.ProjectManager, // Pass Person Id
-      ProjectType: payload.ProjectType ?? '',
-      Division: payload.Division ?? '',
-      Status: payload.Status ?? '',
-      Priority: payload.Priority ?? '',
-      ProjectStartDate: payload.ProjectStartDate ?? null,
-      ProjectEndDate: payload.ProjectEndDate ?? null,
-      ProjectCost: payload.ProjectCost ?? null,
-      Currency: payload.Currency ?? '',
-      InvoiceNo: payload.InvoiceNo ?? '',
-      InvoiceDate: payload.InvoiceDate ?? null,
-    });
-    return result?.data;
-  } catch (err) {
-    logAndRethrow(err, 'createProject');
-  }
+export const createProject = async (sp: SPFI, listName: string, payload: any) => {
+  const result = await sp.web.lists.getByTitle(listName).items.add(payload);
+  return result;
 };
 
-export const updateProject = async (
-  sp: SPFI,
-  libraryName: string,
-  itemId: number,
-  payload: CreateProjectPayload
-) => {
+export const updateProject = async (sp: SPFI, listName: string, itemId: number, payload: any) => {
+  const result = await sp.web.lists.getByTitle(listName).items.getById(itemId).update(payload);
+  return result;
+};
+
+export const deleteProject = async (sp: SPFI, listName: string, itemId: number) => {
   try {
-    const list = sp.web.lists.getByTitle(libraryName);
-    const result = await list.items.getById(itemId).update({
-      ProjectId: payload.ProjectId,
-      ProjectName: payload.ProjectName,
-      ProjectManager: payload.ProjectManager, // Pass Person Id
-      ProjectType: payload.ProjectType ?? '',
-      Division: payload.Division ?? '',
-      Status: payload.Status ?? '',
-      Priority: payload.Priority ?? '',
-      ProjectStartDate: payload.ProjectStartDate ?? null,
-      ProjectEndDate: payload.ProjectEndDate ?? null,
-      ProjectCost: payload.ProjectCost ?? null,
-      Currency: payload.Currency ?? '',
-      InvoiceNo: payload.InvoiceNo ?? '',
-      InvoiceDate: payload.InvoiceDate ?? null,
-    });
-    return result?.data;
-  } catch (err) {
-    logAndRethrow(err, 'updateProject');
+    await sp.web.lists.getByTitle(listName).items.getById(itemId).delete();
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    return { success: false, error };
   }
 };

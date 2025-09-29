@@ -13,6 +13,8 @@ import {
 } from '@ant-design/icons'
 import ProjectModal from '../CreateProjectModal'
 import { useNavigate } from 'react-router-dom'
+import { deleteProject } from '../../../services/service'
+import { spContext } from '../../../App';
 
 const { Search } = Input
 const { Option } = Select
@@ -230,6 +232,7 @@ export default function ProjectsTable({
   })
   const [form] = Form.useForm()
   const navigate = useNavigate();
+   const {sp} =React.useContext(spContext)
 
   // Update project data when props change
   useEffect(() => {
@@ -282,10 +285,11 @@ export default function ProjectsTable({
     setDeleteModalVisible(true)
   }
 
-  const confirmDelete = () => {
-    console.log('Deleting project:', selectedProject?.key)
+  const confirmDelete = async() => {
+    console.log('Deleting project:', selectedProject)
     setDeleteModalVisible(false)
     setSelectedProject(null)
+    await deleteProject(sp,'Project Details',selectedProject)
     message.success('Project deleted successfully!')
     // Call onRefresh to update data
     if (onRefresh) {
@@ -300,6 +304,7 @@ export default function ProjectsTable({
     }
   }
 
+  // Table columns
   // Table columns
   const columns = [
     {
@@ -390,13 +395,15 @@ export default function ProjectsTable({
         ]
 
         return (
-          <Dropdown
-            menu={{ items: menuItems }}
-            trigger={['click']}
-            placement="bottomRight"
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
+          <div onClick={(e) => e.stopPropagation()}>
+            <Dropdown
+              menu={{ items: menuItems }}
+              trigger={['click']}
+              placement="bottomRight"
+            >
+              <Button type="text" icon={<MoreOutlined />} />
+            </Dropdown>
+          </div>
         )
       }
     }
@@ -471,7 +478,7 @@ export default function ProjectsTable({
         onRow={(record) => {
           return {
             onClick: () => {
-              navigate(`/details/${record.key}`); 
+              navigate(`/details/${record.key}`);
             },
           };
         }}

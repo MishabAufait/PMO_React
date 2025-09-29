@@ -39,7 +39,8 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
       .select(
         "Id","ProjectName","ProjectId","ProjectStartDate",
         "ProjectEndDate","Status","ProjectCost","Currency",
-        "ProjectManager/Id","ProjectManager/Title"
+        "ProjectType","Division","Priority","InvoiceNo","InvoiceDate",
+        "ProjectManager/Id","ProjectManager/Title","ProjectManager/EMail"
       )
       .expand("ProjectManager") // expand person field
       .orderBy("Id", false)();
@@ -72,10 +73,10 @@ export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, pr
 export interface CreateProjectPayload {
   ProjectName: string;
   ProjectId: string;
-  ProjectOwnerId: number; // SharePoint Person field Id
+  ProjectManager: number; // SharePoint Person field Id
   ProjectStartDate?: string;
   ProjectEndDate?: string;
-  ProjectOwnerEmail?: string;
+  ProjectManagerEMail?: string;
   ProjectType: string;
   Division: string;
   Status: string;
@@ -96,7 +97,7 @@ export const createProject = async (
     const result = await list.items.add({
       ProjectId: payload.ProjectId,
       ProjectName: payload.ProjectName,
-      ProjectOwnerId: payload.ProjectOwnerId, // Pass Person Id
+      ProjectManager: payload.ProjectManager, // Pass Person Id
       ProjectType: payload.ProjectType ?? '',
       Division: payload.Division ?? '',
       Status: payload.Status ?? '',
@@ -125,7 +126,7 @@ export const updateProject = async (
     const result = await list.items.getById(itemId).update({
       ProjectId: payload.ProjectId,
       ProjectName: payload.ProjectName,
-      ProjectOwnerId: payload.ProjectOwnerId, // Pass Person Id
+      ProjectManager: payload.ProjectManager, // Pass Person Id
       ProjectType: payload.ProjectType ?? '',
       Division: payload.Division ?? '',
       Status: payload.Status ?? '',

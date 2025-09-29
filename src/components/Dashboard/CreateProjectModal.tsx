@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useContext, useEffect, useState } from 'react';
-import { Form, Input, Select, DatePicker, InputNumber, Button, message, Spin } from 'antd';
+import { Form, Input, Select, DatePicker, InputNumber, Button, message } from 'antd';
 import dayjs from 'dayjs';
 import { spContext } from '../../App';
 import { createProject, updateProject, CreateProjectPayload } from '../../services/service';
@@ -8,7 +8,10 @@ import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/People
 
 type Props = {
   mode: 'create' | 'edit';
-  initialValues?: Partial<CreateProjectPayload> & { Id?: number }; // Id for edit
+  initialValues?: Partial<CreateProjectPayload> & { 
+    Id?: number;
+    ProjectManager?: number | { Id: number; Title: string; EMail: string };
+  }; // Id for edit
   onClose: () => void;
   onSuccess?: () => void;
 };
@@ -23,6 +26,50 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
   const contextValue = useContext(spContext);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+
+  // Debug: Log context values
+  console.log('CreateProjectModal - contextValue:', contextValue);
+  console.log('CreateProjectModal - contextValue.sp:', contextValue?.sp);
+  console.log('CreateProjectModal - contextValue.context:', contextValue?.context);
+  
+  // Additional debugging for SharePoint context
+  if (contextValue?.context) {
+    console.log('SharePoint Context Details:');
+    console.log('- pageContext:', contextValue.context.pageContext);
+    console.log('- web:', contextValue.context.web);
+    console.log('- spHttpClient:', contextValue.context.spHttpClient);
+    console.log('- httpClient:', contextValue.context.httpClient);
+    console.log('- msGraphClientFactory:', contextValue.context.msGraphClientFactory);
+    
+    // Test if we can fetch users manually
+    if (contextValue.sp) {
+      console.log('Testing manual user fetch...');
+      console.log('SP object structure:', contextValue.sp);
+      console.log('SP web object:', contextValue.sp.web);
+      
+      try {
+        // Try different ways to access users
+        if (contextValue.sp.web && contextValue.sp.web.siteUsers) {
+          contextValue.sp.web.siteUsers.top(5).then((users: any) => {
+            console.log('Manual user fetch result (siteUsers):', users);
+          }).catch((error: any) => {
+            console.log('Manual user fetch error (siteUsers):', error);
+          });
+        } else if (contextValue.sp.web && contextValue.sp.web.ensureUser) {
+          // Try to get current user info
+          contextValue.sp.web.currentUser.get().then((user: any) => {
+            console.log('Current user info:', user);
+          }).catch((error: any) => {
+            console.log('Current user fetch error:', error);
+          });
+        } else {
+          console.log('SP web object structure:', contextValue.sp.web);
+        }
+      } catch (error) {
+        console.log('Error accessing SP object:', error);
+      }
+    }
+  }
   // const [users, setUsers] = useState<User[]>([]);
   // const [loadingUsers, setLoadingUsers] = useState(true);
 
@@ -148,12 +195,30 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
   // Set initial values in edit mode
   useEffect(() => {
     if (mode === 'edit' && initialValues) {
+      console.log('Setting initial values for edit mode:', initialValues);
       form.setFieldsValue({
-        ...initialValues,
-        ProjectManager: initialValues.ProjectOwnerId, // Fixed field mapping
+        ProjectName: initialValues.ProjectName,
+        ProjectId: initialValues.ProjectId,
+        ProjectManager: typeof initialValues.ProjectManager === 'object' && initialValues.ProjectManager !== null
+          ? (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).Id 
+          : initialValues.ProjectManager, // Handle both object and ID
         ProjectStartDate: initialValues.ProjectStartDate ? dayjs(initialValues.ProjectStartDate) : undefined,
         ProjectEndDate: initialValues.ProjectEndDate ? dayjs(initialValues.ProjectEndDate) : undefined,
+        ProjectType: initialValues.ProjectType,
+        Division: initialValues.Division,
+        Status: initialValues.Status,
+        Priority: initialValues.Priority,
+        ProjectCost: initialValues.ProjectCost,
+        Currency: initialValues.Currency,
+        InvoiceNo: initialValues.InvoiceNo,
         InvoiceDate: initialValues.InvoiceDate ? dayjs(initialValues.InvoiceDate) : undefined,
+      });
+    } else if (mode === 'create') {
+      // Set default values for create mode
+      form.setFieldsValue({
+        Status: 'Planning',
+        Priority: 'Medium',
+        Currency: 'INR'
       });
     } else {
       form.resetFields();
@@ -170,7 +235,7 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
       const payload: any = {
         ProjectName: values.ProjectName,
         ProjectId: values.ProjectId,
-        ProjectManagerId: Number(values.ProjectOwner), // Fixed field name to match backend
+        ProjectManager: Number(values.ProjectManager), // Fixed field name to match backend
         ProjectStartDate: values.ProjectStartDate ? dayjs(values.ProjectStartDate).toISOString() : undefined,
         ProjectEndDate: values.ProjectEndDate ? dayjs(values.ProjectEndDate).toISOString() : undefined,
         ProjectType: values.ProjectType,
@@ -209,8 +274,7 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
   };
 
   return (
-    <Spin  tip="Loading users...">
-      <Form form={form} layout="vertical">
+    <Form form={form} layout="vertical">
         <Form.Item
           label="Project Name"
           name="ProjectName"
@@ -246,31 +310,47 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
         </Form.Item> */}
 
         <Form.Item
-          label="Project Owner"
-          name="ProjectOwner"
-          rules={[{ required: true, message: 'Please select project owner' }]}
+          label="Project Manager"
+          name="ProjectManager"
+          rules={[{ required: true, message: 'Please select project manager' }]}
         >
-          <PeoplePicker
-            context={contextValue.context} // SPFx context from your App
-            titleText="Project Owner"
-            personSelectionLimit={1} // only one owner
-            showtooltip={true}
-            required={true}
-            principalTypes={[PrincipalType.User]} // only users (not groups)
-            resolveDelay={500}
+          {contextValue?.context ? (
+            <PeoplePicker
+              context={contextValue.context} // SPFx context from your App
+              titleText="Project Manager"
+              personSelectionLimit={1} // only one manager
+              showtooltip={true}
+              required={true}
+              principalTypes={[PrincipalType.User]} // only users (not groups)
+              resolveDelay={500}
+              ensureUser={true}
+              showHiddenInUI={false}
             defaultSelectedUsers={
-              mode === 'edit' && initialValues?.ProjectOwnerEmail
-                ? [initialValues.ProjectOwnerEmail]
+              mode === 'edit' && initialValues?.ProjectManager && typeof initialValues.ProjectManager === 'object' && initialValues.ProjectManager !== null
+                ? [(initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).EMail]
                 : []
             }
+            key={mode === 'edit' ? `edit-${initialValues?.Id}` : 'create'}
             onChange={(items) => {
+              console.log('People Picker onChange:', items);
               if (items && items.length > 0) {
-                form.setFieldsValue({ ProjectOwner: items[0].id }); // set hidden field with userId
+                form.setFieldsValue({ ProjectManager: items[0].id }); // set field with userId
+                console.log('Set ProjectManager to:', items[0].id);
               } else {
-                form.setFieldsValue({ ProjectOwner: undefined });
+                form.setFieldsValue({ ProjectManager: undefined });
+                console.log('Cleared ProjectManager');
               }
             }}
-          />
+            onGetErrorMessage={(value) => {
+              console.log('People Picker validation error:', value);
+              return '';
+            }}
+            />
+          ) : (
+            <div style={{ padding: '8px', border: '1px dashed #d9d9d9', borderRadius: '4px', color: '#999' }}>
+              People Picker not available - SharePoint context missing
+            </div>
+          )}
         </Form.Item>
 
 
@@ -307,7 +387,6 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
           label="Status"
           name="Status"
           rules={[{ required: true, message: 'Please select status' }]}
-          initialValue="Planning"
         >
           <Select placeholder="Select project status" options={[
             { value: 'Planning', label: 'Planning' },
@@ -322,7 +401,6 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
           label="Priority"
           name="Priority"
           rules={[{ required: true, message: 'Please select priority' }]}
-          initialValue="Medium"
         >
           <Select placeholder="Select priority" options={[
             { value: 'High', label: 'High' },
@@ -335,7 +413,6 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
           label="Currency"
           name="Currency"
           rules={[{ required: true, message: 'Please select currency' }]}
-          initialValue="INR"
         >
           <Select placeholder="Select currency" options={[
             { value: 'INR', label: 'INR (₹)' },
@@ -408,6 +485,5 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
           </Button>
         </div>
       </Form>
-    </Spin>
   );
 }

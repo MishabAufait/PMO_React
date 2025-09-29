@@ -19,6 +19,9 @@ export default class ErmsMainWebPart extends BaseClientSideWebPart<IErmsMainWebP
   private _sp: ReturnType<typeof spfi>;
 
   public onInit(): Promise<void> {
+    // ✅ Disable Microsoft 365 telemetry to prevent CORS errors
+    (window as any).__m365AnalyticsDisabled = true;
+    
     // ✅ Set favicon
     const head = document.getElementsByTagName("head")[0];
     const link = document.createElement("link");

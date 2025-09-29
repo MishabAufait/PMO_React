@@ -36,7 +36,7 @@ interface Project {
   Id: number;
   ProjectName: string;
   ProjectId: string;
-  ProjectOwner: string;
+  ProjectManager: any;
   ProjectStartDate: string;
   ProjectEndDate?: string;
   ProjectType: string;
@@ -59,6 +59,22 @@ interface MappedProject {
   milestoneStatus: string;
   startDate: string;
   endDate?: string;
+  originalData: {
+    Id: number;
+    ProjectName: string;
+    ProjectId: string;
+    ProjectStartDate: string;
+    ProjectEndDate?: string;
+    Status: string;
+    ProjectCost: number;
+    Currency: string;
+    ProjectType: string;
+    Division: string;
+    Priority: string;
+    InvoiceNo?: string;
+    InvoiceDate?: string;
+    ProjectManager: any;
+  };
 }
 
 // Props interface for the component
@@ -170,7 +186,24 @@ const mapProjectData = (projects: Project[], milestonesMap: Map<number, Mileston
       milestonePct: milestoneData.percentage,
       milestoneStatus: milestoneData.status,
       startDate: formatDate(project.ProjectStartDate),
-      endDate: project.ProjectEndDate ? formatDate(project.ProjectEndDate) : undefined
+      endDate: project.ProjectEndDate ? formatDate(project.ProjectEndDate) : undefined,
+      // Preserve all original project data for editing
+      originalData: {
+        Id: project.Id,
+        ProjectName: project.ProjectName,
+        ProjectId: project.ProjectId,
+        ProjectStartDate: project.ProjectStartDate,
+        ProjectEndDate: project.ProjectEndDate,
+        Status: project.Status,
+        ProjectCost: project.ProjectCost,
+        Currency: project.Currency,
+        ProjectType: project.ProjectType,
+        Division: project.Division,
+        Priority: project.Priority,
+        InvoiceNo: project.InvoiceNo,
+        InvoiceDate: project.InvoiceDate,
+        ProjectManager: project.ProjectManager
+      }
     };
   });
 };
@@ -196,7 +229,6 @@ export default function ProjectsTable({
     dateRange: null
   })
   const [form] = Form.useForm()
-  const [editForm] = Form.useForm()
   const navigate = useNavigate();
 
   // Update project data when props change
@@ -241,21 +273,8 @@ export default function ProjectsTable({
   }
 
   const handleEditProject = (project: any) => {
-    setSelectedProject(project)
+    setSelectedProject(project.originalData)
     setEditDrawerVisible(true)
-    // Pre-fill the form with project data
-    editForm.setFieldsValue({
-      projectName: project.name,
-      projectCode: project.name.split(' ')[0], // Extract first word as code
-      projectOwner: 'Project Owner', // Default value
-      division: 'IT', // Default value
-      projectType: 'Development', // Default value
-      priority: 'Medium', // Default value
-      estimatedCost: parseFloat(project.amount.replace(/[₹,K]/g, '')) * 1000, // Convert to number
-      currency: 'INR',
-      startDate: project.startDate,
-      endDate: project.endDate
-    })
   }
 
   const handleDeleteProject = (project: any) => {

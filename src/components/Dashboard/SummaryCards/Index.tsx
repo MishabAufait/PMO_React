@@ -30,7 +30,7 @@ interface Project {
   Id: number;
   ProjectName: string;
   ProjectId: string;
-  ProjectOwner: string;
+  ProjectManager: any;
   ProjectStartDate: string;
   ProjectEndDate?: string;
   ProjectType: string;

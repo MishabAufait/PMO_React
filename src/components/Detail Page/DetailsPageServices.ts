@@ -20,7 +20,7 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
       const documents = await sp.web.lists
         .getByTitle(libraryName)
         .items
-        .select("Id","ProjectName", "ProjectCode", "ProjectOwner", "ProjectStartDate", "ProjectEndDate", "ProjectType", "Division","ProjectStatus","Priority","EstimatedCost","Currency","InvoiceNo","InvoiceDate")
+        .select("Id","ProjectName", "ProjectId", "ProjectOwner", "ProjectStartDate", "ProjectEndDate", "ProjectType", "Division","ProjectStatus","Priority","EstimatedCost","Currency","InvoiceNo","InvoiceDate")
         .orderBy("Id", false)();
    
       return documents;
@@ -29,55 +29,49 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
     }
   };
 
-  export const getProjectByID = async (
-    sp: SPFI,
-    libraryName: string,
-    projectId: number
-  ) => {
+  export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: number) => {
     try {
-      if (!sp || !sp.web) {
-        throw new Error("SPFI instance is not initialized properly.");
-      }
-  
-      const project = await sp.web.lists
-        .getByTitle(libraryName)
-        .items
-        .getById(projectId)
-        .select(
-          "Id",
-          "ProjectName",
-          "ProjectCode",
-          "ProjectOwner",
-          "ProjectStartDate",
-          "ProjectEndDate",
-          "ProjectType",
-          "Division",
-          "ProjectStatus",
-          "Priority",
-          "EstimatedCost",
-          "Currency",
-          "InvoiceNo",
-          "InvoiceDate"
-        )()// <-- important to call .get() at the end
-  
-      return project;
-    } catch (err) {
-      console.error("Error in getProjectByID:", err);
-      throw err;
+        const project = await sp.web.lists.getByTitle(libraryName)
+        .items.getById(projectId)();
+        return project;
+    } catch (error) {
+        console.error("❌ Error in getProjectByID service:", error);
+        throw error;        
     }
-  };
-  
+}
+
+export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, projectId: number) => {
+    try {
+        const milestone = await sp.web.lists.getByTitle(libraryName)
+        .items.filter(`ProjectId eq '${projectId}'`)
+        .select("Id","Title","Milestone", "ProjectName", "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", "MilestoneTargetDate","MilestoneStatus","MilestonePercentage", "MilestoneDescription")();
+        return milestone;
+    } catch (error) {
+        console.error("❌ Error in getMilestoneByProjectID service:", error);
+        throw error;        
+    }
+}
 
 export const getAllMilestones = async (sp: SPFI, libraryName: string) => {
   try {
     const documents = await sp.web.lists
       .getByTitle(libraryName)
       .items
-      .select("Id","Title","Milestone", "ProjectName", "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", "MilestoneTargetDate","MilestoneStatus","MilestonePercentage")
+      .select("Id","Title","Milestone", "ProjectName", "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", "MilestoneTargetDate","MilestoneStatus","MilestonePercentage", "Created", "MilestoneDescription", "MilestoneModule", "ModuleAmount")
       .orderBy("Id", false)();
- 
     return documents;
   } catch (err) {
     logAndRethrow(err, 'getAllMilestones');
   }
 };
+
+export const getModulesByMilestoneID = async (sp: SPFI, libraryName: string, MilestoneId: number) => {
+  try {
+    const modules = await sp.web.lists.getByTitle(libraryName)
+    .items.filter(`MilestoneID eq '${MilestoneId}'`)
+    .select("Id","Title","ModuleAmount")();
+    return modules;
+  } catch (err) {
+    logAndRethrow(err, 'getModulesByMilestoneID');
+  }
+};  

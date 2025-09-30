@@ -111,8 +111,8 @@ export default function CreateMilestoneModal({ open, onClose, onCreated, onEdite
       onClose={onClose}
       title={isEditMode ? "Edit milestone" : "Create milestone"}
       width={520}
-      extra={
-        <div style={{ display: 'flex', gap: 8 }}>
+      footer={
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="primary" loading={submitting} onClick={handleSubmit}>Save</Button>
         </div>

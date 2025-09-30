@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useState, useMemo } from 'react'
 import styles from './Notifications.module.scss'
-import { Card, Button, Skeleton, Badge } from 'antd'
+import { Card, Button, Skeleton } from 'antd'
 import { 
   FileTextOutlined, 
   CalendarOutlined, 
@@ -35,9 +35,9 @@ interface Project {
   ProjectStartDate: string;
   ProjectEndDate?: string;
   ProjectType: string;
-  Division: string;
+  Department: string;
   Status: string;
-  Priority: string;
+  Complexity: string;
   ProjectCost: number;
   Currency: string;
   InvoiceNo: string;
@@ -296,9 +296,9 @@ export default function Notifications({ projects, milestones, loading }: Notific
       title={
         <div className={styles.notificationsHeader}>
           <span>Notifications</span>
-          <Badge count={unreadCount} size="small">
+          {/* <Badge count={unreadCount} size="small">
             <BellOutlined />
-          </Badge>
+          </Badge> */}
         </div>
       }
       className={styles.notificationsCard}

@@ -42,9 +42,9 @@ interface Project {
   ProjectStartDate: string;
   ProjectEndDate?: string;
   ProjectType: string;
-  Division: string;
+  Department: string;
   Status: string;
-  Priority: string;
+  Complexity: string;
   ProjectCost: number;
   Currency: string;
   InvoiceNo: string;
@@ -200,8 +200,8 @@ const mapProjectData = (projects: Project[], milestonesMap: Map<number, Mileston
         ProjectCost: project.ProjectCost,
         Currency: project.Currency,
         ProjectType: project.ProjectType,
-        Division: project.Division,
-        Priority: project.Priority,
+        Division: project.Department,
+        Priority: project.Complexity,
         InvoiceNo: project.InvoiceNo,
         InvoiceDate: project.InvoiceDate,
         ProjectManager: project.ProjectManager

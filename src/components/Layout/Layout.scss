@@ -1,0 +1,13 @@
+.layout-container {
+  display: flex;
+  height: 100vh; // full viewport height
+  background: #f6f7fb;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto; // scrollable content
+  padding: 20px 24px 32px;
+  max-width: 1240px;
+  margin: 0 auto;
+}

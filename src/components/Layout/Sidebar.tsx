@@ -1,9 +1,13 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.scss';
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Determine active path
+  const currentPath = location.pathname;
 
   return (
     <aside className="sidebar">
@@ -19,23 +23,23 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-        
+
         {/* Navigation Icons */}
         <div className="nav-icons">
           {/* Dashboard Icon */}
           <div
-            className="nav-item active"
+            className={`nav-item ${currentPath === '/' ? 'active' : ''}`}
             title="Dashboard"
             onClick={() => navigate('/')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
             </svg>
           </div>
-          
-          {/* Power BI / Graph Icon */}
+
+          {/* Power BI Icon */}
           <div
-            className="nav-item"
+            className={`nav-item ${currentPath === '/power-bi' ? 'active' : ''}`}
             title="Power BI"
             onClick={() => navigate('/power-bi')}
           >

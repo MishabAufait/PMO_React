@@ -1,101 +1,186 @@
+// .summaryCards {
+//   display: grid;
+//   grid-template-columns: repeat(4, 1fr);
+//   gap: 16px;
+//   margin-bottom: 24px;
+// }
+
+// .summaryCard {
+//   border-radius: 12px;
+//   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+//   border: 1px solid #e5e7eb;
+  
+//   :global(.ant-card-body) {
+//     padding: 20px;
+//   }
+// }
+
+// .summaryContent {
+//   display: flex;
+//   align-items: center;
+//   gap: 16px;
+// }
+
+// .summaryIcon {
+//   font-size: 24px;
+//   width: 48px;
+//   height: 48px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   background: rgba(22, 119, 255, 0.1);
+//   border-radius: 12px;
+// }
+
+// .summaryInfo {
+//   flex: 1;
+// }
+
+// .summaryValue {
+//   font-size: 32px;
+//   font-weight: 700;
+//   color: #1f2937;
+//   line-height: 1;
+//   margin-bottom: 4px;
+// }
+
+// .summaryTitle {
+//   font-size: 14px;
+//   color: #6b7280;
+//   margin-bottom: 8px;
+// }
+
+// .summaryProgress {
+//   :global(.ant-progress-bg) {
+//     height: 4px !important;
+//   }
+// }
+
+// .summarySubtitle {
+//   font-size: 11px;
+//   color: #666;
+//   margin-top: 2px;
+//   margin-bottom: 4px;
+//   line-height: 1.2;
+// }
+
+// .summaryProgress {
+//   margin-top: 8px;
+  
+//   .ant-progress-bg {
+//     transition: all 0.3s ease;
+//   }
+// }
+
+// .summaryCard {
+//   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+//   &:hover {
+//     transform: translateY(-2px);
+//     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+//   }
+// }
+
+// .summaryValue {
+//   font-weight: 600;
+//   font-size: 24px;
+//   line-height: 1.2;
+// }
+
+// // Responsive design
+// @media (max-width: 1200px) {
+//   .summaryCards {
+//     grid-template-columns: repeat(2, 1fr);
+//   }
+// }
+
+// @media (max-width: 768px) {
+//   .summaryCards {
+//     grid-template-columns: 1fr;
+//   }
+// }
+
 .summaryCards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 20px;
   margin-bottom: 24px;
 }
 
 .summaryCard {
-  border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  transition: box-shadow 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
   
   :global(.ant-card-body) {
     padding: 20px;
   }
 }
 
-.summaryContent {
+.cardHeader {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.summaryIcon {
-  font-size: 24px;
-  width: 48px;
-  height: 48px;
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 119, 255, 0.1);
-  border-radius: 12px;
+  flex-shrink: 0;
 }
 
-.summaryInfo {
-  flex: 1;
+.cardTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+  line-height: 1.4;
 }
 
-.summaryValue {
+.cardValue {
   font-size: 32px;
   font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
-  margin-bottom: 4px;
+  color: #111827;
+  line-height: 1.2;
+  margin-bottom: 12px;
 }
 
-.summaryTitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 8px;
-}
-
-.summaryProgress {
+.cardProgress {
   :global(.ant-progress-bg) {
-    height: 4px !important;
+    height: 6px !important;
+    border-radius: 3px;
   }
-}
-
-.summarySubtitle {
-  font-size: 11px;
-  color: #666;
-  margin-top: 2px;
-  margin-bottom: 4px;
-  line-height: 1.2;
-}
-
-.summaryProgress {
-  margin-top: 8px;
   
-  .ant-progress-bg {
-    transition: all 0.3s ease;
+  :global(.ant-progress-inner) {
+    background-color: #F3F4F6;
+    border-radius: 3px;
   }
-}
-
-.summaryCard {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-}
-
-.summaryValue {
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 1.2;
 }
 
 // Responsive design
 @media (max-width: 1200px) {
   .summaryCards {
     grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
   .summaryCards {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .cardValue {
+    font-size: 28px;
   }
 }

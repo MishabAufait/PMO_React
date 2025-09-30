@@ -37,9 +37,9 @@ interface Project {
   ProjectStartDate: string;
   ProjectEndDate?: string;
   ProjectType: string;
-  Division: string;
+  Department: string;
   Status: string;
-  Priority: string;
+  Complexity: string;
   ProjectCost: number;
   Currency: string;
   InvoiceNo: string;

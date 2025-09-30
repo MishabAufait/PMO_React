@@ -307,7 +307,7 @@ export default function MilestoneChart({ milestones, projects, loading }: Milest
                   </div>
 
                   <div className={styles.barLabel} title={item.projectName}>
-                    {item.name}
+                    {item.projectName}
                   </div>
                 </div>
               );

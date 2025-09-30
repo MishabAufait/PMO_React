@@ -16,11 +16,7 @@ import {
 import CreateModuleModal from "./CreateModuleModal";
 import CreateMilestoneModal from "./CreateMilestoneModal";
 import dayjs from "dayjs";
-
-// const milestoneModules = [
-//   { name: "Plant Tour Checklist - All Plant", amount: "₹100,000" },
-//   { name: "Plant Tour Management System - Power Bi", amount: "₹90,000" },
-// ];
+import { useParams } from "react-router-dom";
 
 const moduleColumns = [
   { title: "Module Name", dataIndex: "Title", key: "Title" },
@@ -29,10 +25,10 @@ const moduleColumns = [
 
 interface IProject {
   Id: number;
-  Title?: string; // SharePoint default field
+  Title?: string;
   ProjectName?: string;
-  ProjectCode?: string; // This field might not exist
-  ProjectOwner?: string;
+  ProjectCode?: string;
+  projectOwner?: string; // updated property
   ProjectStartDate?: string;
   ProjectEndDate?: string;
   ProjectType?: string;
@@ -43,7 +39,6 @@ interface IProject {
   Currency?: string;
   InvoiceNo?: string;
   InvoiceDate?: string;
-  // Allow for additional fields that might exist
   [key: string]: any;
 }
 
@@ -69,12 +64,8 @@ interface IModule {
   ModuleAmount: number;
 }
 
-interface IProps {
-  projectId: number;
-}
-
-// Fetch project details
-const ProjectDetails: React.FC<IProps> = ({ projectId }) => {
+// Main component to fetch project details
+const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<IProject | null>(null);
   const [milestones, setMilestones] = useState<IMilestone[]>([]);
   const [modulesByMilestone, setModulesByMilestone] = useState<
@@ -83,6 +74,7 @@ const ProjectDetails: React.FC<IProps> = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const { sp } = useContext(spContext);
   const [trigger, setTrigger] = useState(false);
+  const { projectId } = useParams();
 
   useEffect(() => {
     if (!sp || !projectId) {
@@ -97,34 +89,25 @@ const ProjectDetails: React.FC<IProps> = ({ projectId }) => {
 
     const fetchData = async () => {
       try {
-        const data = await getProjectByID(sp, "Project Details", projectId);
+        const data = await getProjectByID(sp, "Project Details", Number(projectId));
         setProject(data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("❌ Error fetching project:", error);
-        console.error("❌ Error details:", {
-          message: error?.message,
-          stack: error?.stack,
-          name: error?.name,
-        });
       } finally {
         setLoading(false);
         console.log("🏁 Loading state set to false");
       }
     };
 
-    fetchData();
-
     const fetchModulesForMilestones = async () => {
       try {
-        // First fetch milestones
         const milestonesData = await getMilestonesByProjectID(
           sp,
           "Milestone Details",
-          projectId
+          Number(projectId)
         );
         setMilestones(milestonesData);
 
-        // Then fetch modules for each milestone
         const modulesMap: Record<number, IModule[]> = {};
         for (const milestone of milestonesData) {
           const milestoneModules = await getModulesByMilestoneID(
@@ -132,33 +115,24 @@ const ProjectDetails: React.FC<IProps> = ({ projectId }) => {
             "M_Modules",
             milestone.Id
           );
-          if (milestoneModules) {
-            const mappedModules = milestoneModules.map((m: any) => ({
-              Title: m.Title,
-              ModuleAmount: m.ModuleAmount,
-              Id: m.Id,
-            }));
-            modulesMap[milestone.Id] = mappedModules;
-            console.log(
-              `🎨 Modules for milestone ${milestone.Id}:`,
-              mappedModules
-            );
-          } else {
-            modulesMap[milestone.Id] = [];
-          }
+          modulesMap[milestone.Id] = milestoneModules
+            ? milestoneModules.map((m: any) => ({
+                Title: m.Title,
+                ModuleAmount: m.ModuleAmount,
+                Id: m.Id,
+              }))
+            : [];
         }
         setModulesByMilestone(modulesMap);
         console.log("🎨 All modules by milestone:", modulesMap);
-      } catch (error) {
+      } catch (error: any) {
         console.error("❌ Error fetching milestones/modules:", error);
-        console.error("❌ Error details:", {
-          message: error?.message,
-        });
       }
     };
 
+    fetchData();
     fetchModulesForMilestones();
-  }, [trigger]);
+  }, [sp, projectId, trigger]);
 
   if (loading) return <div>Loading...</div>;
 
@@ -172,6 +146,7 @@ const ProjectDetails: React.FC<IProps> = ({ projectId }) => {
   );
 };
 
+// DetailsPage Component
 const DetailsPage: React.FC<{
   project: IProject | null;
   milestones: IMilestone[];
@@ -180,9 +155,7 @@ const DetailsPage: React.FC<{
 }> = ({ project, milestones, modulesByMilestone, setTrigger }) => {
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<
-    number | undefined
-  >();
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | undefined>();
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -191,7 +164,7 @@ const DetailsPage: React.FC<{
     projectName: project?.ProjectName,
     projectTitle: project?.Title,
     projectCode: project?.ProjectCode,
-    projectOwner: project?.ProjectOwner,
+    projectOwner: project?.projectOwner, // ✅ updated
     projectStatus: project?.ProjectStatus,
     projectType: project?.ProjectType,
     division: project?.Division,
@@ -200,11 +173,6 @@ const DetailsPage: React.FC<{
     startDate: project?.ProjectStartDate,
     endDate: project?.ProjectEndDate,
   });
-
-  console.log(
-    "All available project fields:",
-    project ? Object.keys(project) : "No project data"
-  );
 
   const handleAddModule = (milestoneId: number) => {
     setSelectedMilestoneId(milestoneId);
@@ -234,20 +202,9 @@ const DetailsPage: React.FC<{
     setSelectedMilestoneData(null);
   };
 
-  const handleModuleCreated = () => {
-    // Refresh milestones data or show success message
-    console.log("Module created successfully");
-  };
-
-  const handleMilestoneCreated = () => {
-    // Refresh milestones data or show success message
-    console.log("Milestone created successfully");
-  };
-
-  const handleMilestoneEdited = () => {
-    // Refresh milestones data or show success message
-    console.log("Milestone edited successfully");
-  };
+  const handleModuleCreated = () => console.log("Module created successfully");
+  const handleMilestoneCreated = () => console.log("Milestone created successfully");
+  const handleMilestoneEdited = () => console.log("Milestone edited successfully");
 
   return (
     <div className={styles.detailsPage}>
@@ -267,15 +224,15 @@ const DetailsPage: React.FC<{
             <div className={styles.detailsRow}>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project code</div>
-                <div className={styles.detailValue}>{project?.projectId}</div>
+                <div className={styles.detailValue}>{project?.ProjectCode}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project owner</div>
-                <div className={styles.detailValue}>{project?.PMName}</div>
+                <div className={styles.detailValue}>{project?.projectOwner}</div> {/* ✅ updated */}
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Division</div>
-                <div className={styles.detailValue}>{project?.Department}</div>
+                <div className={styles.detailValue}>{project?.Division}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project type</div>
@@ -290,19 +247,15 @@ const DetailsPage: React.FC<{
                 <div className={styles.detailValue}>{project?.ProjectCost}</div>
               </div>
               <div className={styles.detailColumn}>
-                <div className={styles.detailLabel}>
-                  Estimated start date
-                </div>
+                <div className={styles.detailLabel}>Estimated start date</div>
                 <div className={styles.detailValue}>
-                  {dayjs(project?.ProjectStartDate).format("DD/MM/YYYY") || "-"}
+                  {project?.ProjectStartDate ? dayjs(project.ProjectStartDate).format("DD/MM/YYYY") : "-"}
                 </div>
               </div>
               <div className={styles.detailColumn}>
-                <div className={styles.detailLabel}>
-                  Estimated end date
-                </div>
+                <div className={styles.detailLabel}>Estimated end date</div>
                 <div className={styles.detailValue}>
-                  {project?.ProjectEndDate || "-"}
+                  {project?.ProjectEndDate ? dayjs(project.ProjectEndDate).format("DD/MM/YYYY") : "-"}
                 </div>
               </div>
             </div>
@@ -314,65 +267,33 @@ const DetailsPage: React.FC<{
       <div className={styles.milestoneSection}>
         <div className={styles.milestoneHeader}>
           <h2 className={styles.milestoneTitle}>Milestone progress</h2>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAddMilestone}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddMilestone}>
             Add milestone
           </Button>
         </div>
 
-        {/* Milestone Cards */}
         <div className={styles.milestoneCardsContainer}>
           <div className={styles.milestoneCards}>
-            {/* Plant Tour Card */}
-            {milestones.map((milestone, index) => (
-              <Card className={styles.milestoneCard}>
+            {milestones.map((milestone) => (
+              <Card key={milestone.Id} className={styles.milestoneCard}>
                 <div className={styles.milestoneCardHeader}>
                   <div className={styles.milestoneInfo}>
                     <div className={styles.milestoneCreator}>
-                      <Avatar
-                        size="small"
-                        style={{ backgroundColor: "#1677ff" }}
-                      >
-                        {project?.PMName.charAt(0)}
+                      <Avatar size="small" style={{ backgroundColor: "#1677ff" }}>
+                        {project?.projectOwner?.charAt(0)}
                       </Avatar>
                       <div className={styles.creatorDetails}>
-                        <span className={styles.creatorName}>
-                          {project?.PMName}
-                        </span>
-                        <span className={styles.createdDate}>
-                          {milestone.Created}
-                        </span>
+                        <span className={styles.creatorName}>{project?.projectOwner}</span>
+                        <span className={styles.createdDate}>{milestone.Created}</span>
                       </div>
                     </div>
                     <div className={styles.milestoneTitleRow}>
-                      <h3 className={styles.milestoneName}>
-                        {milestone.Milestone}
-                      </h3>
-                      <Tag
-                        className={styles.statusTag}
-                        color={
-                          dayjs(milestone.MilestoneDueDate).isBefore(
-                            dayjs(),
-                            "day"
-                          )
-                            ? "orange"
-                            : "green"
-                        }
-                      >
-                        {dayjs(milestone.MilestoneDueDate).isBefore(
-                          dayjs(),
-                          "day"
-                        )
-                          ? "Delayed"
-                          : "On track"}
+                      <h3 className={styles.milestoneName}>{milestone.Milestone}</h3>
+                      <Tag color={dayjs(milestone.MilestoneDueDate).isBefore(dayjs(), "day") ? "orange" : "green"}>
+                        {dayjs(milestone.MilestoneDueDate).isBefore(dayjs(), "day") ? "Delayed" : "On track"}
                       </Tag>
                     </div>
-                    <p className={styles.milestoneDescription}>
-                      {milestone.MilestoneDescription}
-                    </p>
+                    <p className={styles.milestoneDescription}>{milestone.MilestoneDescription}</p>
                   </div>
                   <Button
                     type="text"
@@ -386,9 +307,7 @@ const DetailsPage: React.FC<{
                   <div className={styles.milestoneDetailRow}>
                     <div className={styles.detailColumn}>
                       <div className={styles.detailLabel}>Milestone amount</div>
-                      <div className={styles.detailValue}>
-                        ₹{milestone.Amount}
-                      </div>
+                      <div className={styles.detailValue}>₹{milestone.Amount}</div>
                     </div>
                     <div className={styles.detailColumn}>
                       <div className={styles.detailLabel}>Due date</div>
@@ -397,28 +316,18 @@ const DetailsPage: React.FC<{
                       </div>
                     </div>
                     <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>
-                        Milestone target date
-                      </div>
+                      <div className={styles.detailLabel}>Milestone target date</div>
                       <div className={styles.detailValue}>
-                        {dayjs(milestone.MilestoneTargetDate).format(
-                          "DD/MM/YYYY"
-                        )}
+                        {dayjs(milestone.MilestoneTargetDate).format("DD/MM/YYYY")}
                       </div>
                     </div>
                     <div className={styles.detailColumn}>
                       <div className={styles.detailLabel}>Milestone status</div>
-                      <div className={styles.detailValue}>
-                        {milestone.MilestoneStatus}
-                      </div>
+                      <div className={styles.detailValue}>{milestone.MilestoneStatus}</div>
                     </div>
                     <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>
-                        Milestone percentage
-                      </div>
-                      <Tag color="green">
-                        Completed: {milestone.MilestonePercentage}%
-                      </Tag>
+                      <div className={styles.detailLabel}>Milestone percentage</div>
+                      <Tag color="green">Completed: {milestone.MilestonePercentage}%</Tag>
                     </div>
                   </div>
                 </div>
@@ -437,12 +346,10 @@ const DetailsPage: React.FC<{
                   </div>
                   <Table
                     columns={moduleColumns}
-                    dataSource={(modulesByMilestone[milestone.Id] || []).map(
-                      (m: IModule) => ({
-                        ...m,
-                        key: m.Id,
-                      })
-                    )}
+                    dataSource={(modulesByMilestone[milestone.Id] || []).map((m: IModule) => ({
+                      ...m,
+                      key: m.Id,
+                    }))}
                     pagination={false}
                     size="small"
                     className={styles.modulesTable}

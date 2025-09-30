@@ -1,0 +1,13 @@
+.report-container {
+  height: calc(100vh - 64px); // Adjust this value based on your header height
+//   margin-left: 240px; // Adjust this if your sidebar width is different
+  overflow: auto;
+  padding: 0;
+}
+ 
+.report-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+ 

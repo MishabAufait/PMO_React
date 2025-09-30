@@ -7,8 +7,6 @@ import {
   ClockCircleOutlined,
   ExclamationCircleOutlined,
   GlobalOutlined,
-  CalendarOutlined,
-  DollarOutlined
 } from '@ant-design/icons'
 
 // Types
@@ -210,39 +208,39 @@ export default function SummaryCards({ projects, milestones, loading }: SummaryC
   }, [projects, milestones]);
 
   // Additional metrics that could be useful
-  const additionalMetrics = useMemo(() => {
-    if (!projects || projects.length === 0 || !milestones || milestones.length === 0) {
-      return [];
-    }
+  // const additionalMetrics = useMemo(() => {
+  //   if (!projects || projects.length === 0 || !milestones || milestones.length === 0) {
+  //     return [];
+  //   }
 
-    // Calculate average project value
-    const avgProjectValue = projects.reduce((sum, p) => sum + p.ProjectCost, 0) / projects.length;
+  //   // Calculate average project value
+  //   const avgProjectValue = projects.reduce((sum, p) => sum + p.ProjectCost, 0) / projects.length;
     
-    // Count overdue milestones
-    const overdueMilestones = milestones.filter(m => 
-      m.MilestoneStatus !== 'Completed' &&
-      new Date(m.MilestoneTargetDate) < new Date()
-    ).length;
+  //   // Count overdue milestones
+  //   const overdueMilestones = milestones.filter(m => 
+  //     m.MilestoneStatus !== 'Completed' &&
+  //     new Date(m.MilestoneTargetDate) < new Date()
+  //   ).length;
 
-    return [
-      {
-        title: 'Avg Project Value',
-        value: formatTotalValue(avgProjectValue),
-        icon: <DollarOutlined />,
-        color: '#722ed1',
-        progress: 75, // Could be based on budget utilization
-        subtitle: 'Per project'
-      },
-      {
-        title: 'Overdue Milestones',
-        value: overdueMilestones,
-        icon: <CalendarOutlined />,
-        color: '#fa8c16',
-        progress: milestones.length > 0 ? Math.round((overdueMilestones / milestones.length) * 100) : 0,
-        subtitle: 'Need immediate attention'
-      }
-    ];
-  }, [projects, milestones]);
+  //   return [
+  //     {
+  //       title: 'Avg Project Value',
+  //       value: formatTotalValue(avgProjectValue),
+  //       icon: <DollarOutlined />,
+  //       color: '#722ed1',
+  //       progress: 75, // Could be based on budget utilization
+  //       subtitle: 'Per project'
+  //     },
+  //     {
+  //       title: 'Overdue Milestones',
+  //       value: overdueMilestones,
+  //       icon: <CalendarOutlined />,
+  //       color: '#fa8c16',
+  //       progress: milestones.length > 0 ? Math.round((overdueMilestones / milestones.length) * 100) : 0,
+  //       subtitle: 'Need immediate attention'
+  //     }
+  //   ];
+  // }, [projects, milestones]);
 
   // Show loading skeleton
   if (loading) {
@@ -286,7 +284,7 @@ export default function SummaryCards({ projects, milestones, loading }: SummaryC
       ))}
       
       {/* Additional metrics - can be toggled or shown separately */}
-      {additionalMetrics.length > 0 && (
+      {/* {additionalMetrics.length > 0 && (
         <>
           {additionalMetrics.slice(0, 2).map((item, index) => (
             <Card key={`additional-${index}`} className={styles.summaryCard}>
@@ -314,7 +312,7 @@ export default function SummaryCards({ projects, milestones, loading }: SummaryC
             </Card>
           ))}
         </>
-      )}
+      )} */}
     </div>
   )
 }

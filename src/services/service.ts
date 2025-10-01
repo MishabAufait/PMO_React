@@ -56,7 +56,7 @@ export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, pr
     const milestone = await sp.web.lists
       .getByTitle(libraryName)
       .items
-      .filter(`ProjectId eq '${projectId}'`)
+      .filter(`Id eq '${projectId}'`)
       .select(
         "Id","Title","Milestone","ProjectName","ProjectId",
         "MilestoneDueDate","InvoiceNo","Amount","Currency","ModuleAmount",

@@ -31,9 +31,10 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
 
 export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: number) => {
   try {
-    const project = await sp.web.lists
+    const projects_list:any = await sp.web.lists
       .getByTitle(libraryName)
       .items
+      .filter(`ProjectId eq '${projectId}'`)
       .select(
         "Id",
         "Title",
@@ -50,10 +51,9 @@ export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: n
         "ProjectManager/Title",
         "ProjectManager/EMail"
       )
-      .expand("ProjectManager")
-      .getById(projectId)();
+      .expand("ProjectManager");
 
-    
+    const project = projects_list[0] || {};
     const projectOwner = project?.ProjectManager?.Title || "";
 
     console.log(projectOwner, "project owner")

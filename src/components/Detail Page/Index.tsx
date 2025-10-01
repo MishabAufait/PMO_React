@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState, useEffect, useContext } from "react";
 import styles from "./DetailsPage.module.scss";
-import { Card, Button, Tag, Avatar, Table } from "antd";
+import { Card, Button, Tag, Avatar } from "antd";
 import {
   EditOutlined,
   InfoCircleOutlined,
@@ -18,10 +18,10 @@ import CreateMilestoneModal from "./CreateMilestoneModal";
 import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
 
-const moduleColumns = [
-  { title: "Module Name", dataIndex: "Title", key: "Title" },
-  { title: "Amount", dataIndex: "ModuleAmount", key: "ModuleAmount" },
-];
+// const moduleColumns = [
+//   { title: "Module Name", dataIndex: "Title", key: "Title" },
+//   { title: "Amount", dataIndex: "ModuleAmount", key: "ModuleAmount" },
+// ];
 
 interface IProject {
   Id: number;
@@ -89,7 +89,11 @@ const ProjectDetails: React.FC = () => {
 
     const fetchData = async () => {
       try {
-        const data = await getProjectByID(sp, "Project Details", Number(projectId));
+        const data = await getProjectByID(
+          sp,
+          "Project Details",
+          Number(projectId)
+        );
         setProject(data);
       } catch (error: any) {
         console.error("❌ Error fetching project:", error);
@@ -155,7 +159,9 @@ const DetailsPage: React.FC<{
 }> = ({ project, milestones, modulesByMilestone, setTrigger }) => {
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | undefined>();
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<
+    number | undefined
+  >();
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -163,21 +169,21 @@ const DetailsPage: React.FC<{
   console.log("🎨 Project data for headers:", {
     projectName: project?.ProjectName,
     projectTitle: project?.Title,
-    projectCode: project?.ProjectCode,
+    projectCode: project?.ProjectId,
     projectOwner: project?.projectOwner, // ✅ updated
     projectStatus: project?.ProjectStatus,
     projectType: project?.ProjectType,
-    division: project?.Division,
+    division: project?.Department,
     estimatedCost: project?.EstimatedCost,
     currency: project?.Currency,
     startDate: project?.ProjectStartDate,
     endDate: project?.ProjectEndDate,
   });
 
-  const handleAddModule = (milestoneId: number) => {
-    setSelectedMilestoneId(milestoneId);
-    setIsModuleModalOpen(true);
-  };
+  // const handleAddModule = (milestoneId: number) => {
+  //   setSelectedMilestoneId(milestoneId);
+  //   setIsModuleModalOpen(true);
+  // };
 
   const handleAddMilestone = () => {
     setIsEditMode(false);
@@ -203,8 +209,10 @@ const DetailsPage: React.FC<{
   };
 
   const handleModuleCreated = () => console.log("Module created successfully");
-  const handleMilestoneCreated = () => console.log("Milestone created successfully");
-  const handleMilestoneEdited = () => console.log("Milestone edited successfully");
+  const handleMilestoneCreated = () =>
+    console.log("Milestone created successfully");
+  const handleMilestoneEdited = () =>
+    console.log("Milestone edited successfully");
 
   return (
     <div className={styles.detailsPage}>
@@ -224,15 +232,18 @@ const DetailsPage: React.FC<{
             <div className={styles.detailsRow}>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project code</div>
-                <div className={styles.detailValue}>{project?.ProjectCode}</div>
+                <div className={styles.detailValue}>{project?.ProjectId}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project owner</div>
-                <div className={styles.detailValue}>{project?.projectOwner}</div> {/* ✅ updated */}
+                <div className={styles.detailValue}>
+                  {project?.projectOwner}
+                </div>{" "}
+                {/* ✅ updated */}
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Division</div>
-                <div className={styles.detailValue}>{project?.Division}</div>
+                <div className={styles.detailValue}>{project?.Department}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project type</div>
@@ -249,13 +260,17 @@ const DetailsPage: React.FC<{
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Estimated start date</div>
                 <div className={styles.detailValue}>
-                  {project?.ProjectStartDate ? dayjs(project.ProjectStartDate).format("DD/MM/YYYY") : "-"}
+                  {project?.ProjectStartDate
+                    ? dayjs(project.ProjectStartDate).format("DD/MM/YYYY")
+                    : "-"}
                 </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Estimated end date</div>
                 <div className={styles.detailValue}>
-                  {project?.ProjectEndDate ? dayjs(project.ProjectEndDate).format("DD/MM/YYYY") : "-"}
+                  {project?.ProjectEndDate
+                    ? dayjs(project.ProjectEndDate).format("DD/MM/YYYY")
+                    : "-"}
                 </div>
               </div>
             </div>
@@ -267,7 +282,11 @@ const DetailsPage: React.FC<{
       <div className={styles.milestoneSection}>
         <div className={styles.milestoneHeader}>
           <h2 className={styles.milestoneTitle}>Milestone progress</h2>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddMilestone}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddMilestone}
+          >
             Add milestone
           </Button>
         </div>
@@ -276,63 +295,108 @@ const DetailsPage: React.FC<{
           <div className={styles.milestoneCards}>
             {milestones.map((milestone) => (
               <Card key={milestone.Id} className={styles.milestoneCard}>
-                <div className={styles.milestoneCardHeader}>
-                  <div className={styles.milestoneInfo}>
-                    <div className={styles.milestoneCreator}>
-                      <Avatar size="small" style={{ backgroundColor: "#1677ff" }}>
-                        {project?.projectOwner?.charAt(0)}
-                      </Avatar>
-                      <div className={styles.creatorDetails}>
-                        <span className={styles.creatorName}>{project?.projectOwner}</span>
-                        <span className={styles.createdDate}>{milestone.Created}</span>
+                <div className={styles.milestoneCardBlock}>
+                  <div className={styles.milestoneCardHeader}>
+                    <div className={styles.milestoneInfo}>
+                      <div className={styles.milestoneCreator}>
+                        <Avatar
+                          size="small"
+                          style={{ backgroundColor: "#1677ff" }}
+                        >
+                          {project?.projectOwner?.charAt(0)}
+                        </Avatar>
+                        <div className={styles.creatorDetails}>
+                          <span className={styles.creatorName}>
+                            {project?.projectOwner}
+                          </span>
+                          <span className={styles.createdDate}>
+                            {milestone.Created}
+                          </span>
+                        </div>
+                      </div>
+                      <div className={styles.milestoneTitleRow}>
+                        <h3 className={styles.milestoneName}>
+                          {milestone.Milestone}
+                        </h3>
+                        <Tag
+                          color={
+                            dayjs(milestone.MilestoneDueDate).isBefore(
+                              dayjs(),
+                              "day"
+                            )
+                              ? "orange"
+                              : "green"
+                          }
+                        >
+                          {dayjs(milestone.MilestoneDueDate).isBefore(
+                            dayjs(),
+                            "day"
+                          )
+                            ? "Delayed"
+                            : "On track"}
+                        </Tag>
+                      </div>
+                      <p className={styles.milestoneDescription}>
+                        {milestone.MilestoneDescription}
+                      </p>
+                    </div>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      className={styles.editButton}
+                      onClick={() => handleEditMilestone(milestone)}
+                    />
+                  </div>
+
+                  <div className={styles.milestoneDetails}>
+                    <div className={styles.milestoneDetailRow}>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>
+                          Milestone amount
+                        </div>
+                        <div className={styles.detailValue}>
+                          ₹{milestone.Amount}
+                        </div>
+                      </div>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>Due date</div>
+                        <div className={styles.detailValue}>
+                          {dayjs(milestone.MilestoneDueDate).format(
+                            "DD/MM/YYYY"
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>
+                          Milestone target date
+                        </div>
+                        <div className={styles.detailValue}>
+                          {dayjs(milestone.MilestoneTargetDate).format(
+                            "DD/MM/YYYY"
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>
+                          Milestone status
+                        </div>
+                        <div className={styles.detailValue}>
+                          {milestone.MilestoneStatus}
+                        </div>
+                      </div>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>
+                          Milestone percentage
+                        </div>
+                        <Tag color="green">
+                          Completed: {milestone.MilestonePercentage}%
+                        </Tag>
                       </div>
                     </div>
-                    <div className={styles.milestoneTitleRow}>
-                      <h3 className={styles.milestoneName}>{milestone.Milestone}</h3>
-                      <Tag color={dayjs(milestone.MilestoneDueDate).isBefore(dayjs(), "day") ? "orange" : "green"}>
-                        {dayjs(milestone.MilestoneDueDate).isBefore(dayjs(), "day") ? "Delayed" : "On track"}
-                      </Tag>
-                    </div>
-                    <p className={styles.milestoneDescription}>{milestone.MilestoneDescription}</p>
                   </div>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    className={styles.editButton}
-                    onClick={() => handleEditMilestone(milestone)}
-                  />
                 </div>
 
-                <div className={styles.milestoneDetails}>
-                  <div className={styles.milestoneDetailRow}>
-                    <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>Milestone amount</div>
-                      <div className={styles.detailValue}>₹{milestone.Amount}</div>
-                    </div>
-                    <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>Due date</div>
-                      <div className={styles.detailValue}>
-                        {dayjs(milestone.MilestoneDueDate).format("DD/MM/YYYY")}
-                      </div>
-                    </div>
-                    <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>Milestone target date</div>
-                      <div className={styles.detailValue}>
-                        {dayjs(milestone.MilestoneTargetDate).format("DD/MM/YYYY")}
-                      </div>
-                    </div>
-                    <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>Milestone status</div>
-                      <div className={styles.detailValue}>{milestone.MilestoneStatus}</div>
-                    </div>
-                    <div className={styles.detailColumn}>
-                      <div className={styles.detailLabel}>Milestone percentage</div>
-                      <Tag color="green">Completed: {milestone.MilestonePercentage}%</Tag>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.targetResult}>
+                {/* <div className={styles.targetResult}>
                   <div className={styles.targetResultHeader}>
                     <h4 className={styles.targetResultTitle}>Target result</h4>
                     <Button
@@ -354,7 +418,7 @@ const DetailsPage: React.FC<{
                     size="small"
                     className={styles.modulesTable}
                   />
-                </div>
+                </div> */}
               </Card>
             ))}
           </div>

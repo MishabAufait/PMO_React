@@ -3,20 +3,19 @@ import { useState, useMemo, useEffect } from 'react'
 import styles from './ProjectsTable.module.scss'
 import { Card, Button, Table, Tag, Input, Modal, Drawer, Form, Select, DatePicker, InputNumber, Dropdown, message } from 'antd'
 import {
-  SearchOutlined,
-  FilterOutlined,
   MoreOutlined,
   PlusOutlined,
   ReloadOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  SearchOutlined,
+  FunnelPlotOutlined
 } from '@ant-design/icons'
 import ProjectModal from '../CreateProjectModal'
 import { useNavigate } from 'react-router-dom'
 import { deleteProject } from '../../../services/service'
 import { spContext } from '../../../App';
 
-const { Search } = Input
 const { Option } = Select
 
 // Types for better type safety
@@ -232,7 +231,7 @@ export default function ProjectsTable({
   })
   const [form] = Form.useForm()
   const navigate = useNavigate();
-   const {sp} =React.useContext(spContext)
+  const { sp } = React.useContext(spContext)
 
   // Update project data when props change
   useEffect(() => {
@@ -285,11 +284,11 @@ export default function ProjectsTable({
     setDeleteModalVisible(true)
   }
 
-  const confirmDelete = async() => {
+  const confirmDelete = async () => {
     console.log('Deleting project:', selectedProject)
     setDeleteModalVisible(false)
     setSelectedProject(null)
-    await deleteProject(sp,'Project Details',selectedProject)
+    await deleteProject(sp, 'Project Details', selectedProject)
     message.success('Project deleted successfully!')
     // Call onRefresh to update data
     if (onRefresh) {
@@ -412,42 +411,58 @@ export default function ProjectsTable({
   return (
     <Card
       title={
-        <div className={styles.projectsHeader}>
-          <div>
-            <h3 className={styles.projectsTitle}>Projects</h3>
-            <p className={styles.projectsSubtitle}>All projects</p>
-          </div>
-          <div className={styles.projectsActions}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateDrawerVisible(true)}
-            >
-              Create project
-            </Button>
-            <Search
-              placeholder="Search projects..."
-              className={styles.searchInput}
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-            <Button
-              icon={<FilterOutlined />}
-              className={styles.filterButton}
-              onClick={() => setFilterModalVisible(true)}
-            />
-            {onRefresh && (
+        <>
+          <div className={styles.projectsHeader}>
+            <div>
+              <h3 className={styles.projectsTitle}>Projects</h3>
+
+            </div>
+            <div className={styles.projectsActions}>
               <Button
-                icon={<ReloadOutlined />}
-                onClick={onRefresh}
-                loading={loading}
-                title="Refresh data"
-              />
-            )}
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateDrawerVisible(true)}
+              >
+                Create project
+              </Button>
+            </div>
           </div>
-        </div>
+          <div className={styles.projectsHeader2}>
+            <p
+              className={`${styles.projectsTab} ${styles.projectsTabActive}`}
+            >
+              All projects
+            </p>
+
+            <div className={styles.projectsActions}>
+
+              <Input
+                placeholder="Search projects..."
+                className={styles.searchInput}
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+              />
+
+              <Button
+                icon={<FunnelPlotOutlined />}
+                className={styles.filterButton}
+                onClick={() => setFilterModalVisible(true)}
+              >
+                Filter
+              </Button>
+              {onRefresh && (
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={onRefresh}
+                  loading={loading}
+                  title="Refresh data"
+                />
+              )}
+            </div>
+          </div>
+        </>
       }
       className={styles.projectsCard}
     >
@@ -474,7 +489,7 @@ export default function ProjectsTable({
           pageSize: 10,   // show 10 per page
           showSizeChanger: false, // hides page size dropdown (optional)
         }}
-
+        bordered
         onRow={(record) => {
           return {
             onClick: () => {

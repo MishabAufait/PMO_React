@@ -1,17 +1,17 @@
-import * as React from 'react'
-import { useState, useEffect, useContext } from 'react'
-import { message } from 'antd'
-import './Dashboard.scss'
+import * as React from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { message } from 'antd';
+import './Dashboard.scss';
 
-// Import individual components
-import SummaryCards from './SummaryCards/Index'
-import MilestoneChart from './MilestoneChart/Index'
-import Notifications from './Notifications/Index'
-import ProjectsTable from './ProjectsTable/Index'
+// Components
+import SummaryCards from './SummaryCards/Index';
+import MilestoneChart from './MilestoneChart/Index';
+import Notifications from './Notifications/Index';
+import ProjectsTable from './ProjectsTable/Index';
 
-// Import services and context
-import { spContext } from '../../App'
-import { getAllProjects, getMilestonesByProjectID } from '../../services/service'
+// Services and context
+import { spContext } from '../../App';
+import { getAllProjects, getMilestonesByProjectID, getMasterRespondersData } from '../../services/service';
 
 // Types
 interface Milestone {
@@ -32,6 +32,8 @@ interface Milestone {
 interface Project {
   Id: number;
   ProjectName: string;
+  CompanyName: string;
+  Phase: string;
   ProjectId: string;
   ProjectManager: any;
   ProjectStartDate: string;
@@ -46,10 +48,21 @@ interface Project {
   InvoiceDate: string;
 }
 
+interface MasterResponder {
+  Id: number;
+  ResponderId: number;
+  ResponderName: string;
+  ResponderEmail: string;
+  Responded: boolean;
+  InitiatedDate: string;
+  RespondedDate: string;
+}
+
 interface DashboardData {
   projects: Project[];
   milestones: Milestone[];
   milestonesMap: Map<number, Milestone[]>;
+  reminders: MasterResponder[];
   loading: boolean;
   error: string | null;
 }
@@ -60,101 +73,98 @@ export default function ModernDashboard() {
     projects: [],
     milestones: [],
     milestonesMap: new Map(),
+    reminders: [],
     loading: true,
-    error: null
+    error: null,
   });
 
-  const [userName, setUserName] = useState<string>("");
+  const [userName, setUserName] = useState<string>('');
 
-  // ✅ Fetch current user
+  // Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
       if (!sp) return;
       try {
         const user = await sp.web.currentUser();
-        setUserName(user.Title); // e.g. "Jane Doe"
+        setUserName(user.Title);
       } catch (err) {
-        console.error("❌ Error fetching current user:", err);
-        setUserName("Guest");
+        console.error('❌ Error fetching current user:', err);
+        setUserName('Guest');
       }
     };
     fetchUser();
   }, [sp]);
 
-  // ✅ Function to fetch all dashboard data
+  // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
       setDashboardData(prev => ({ ...prev, loading: true, error: null }));
 
-      // 🔹 Fetch all projects with only required fields
-      const projects = await getAllProjects(sp, 'Project Details');
-      if (!projects || projects.length === 0) {
-        setDashboardData({
-          projects: [],
-          milestones: [],
-          milestonesMap: new Map(),
-          loading: false,
-          error: null
+      const projects = await getAllProjects(sp, 'Project Details') || [];
+      let allMilestones: Milestone[] = [];  // ✅ Declare once
+      let milestonesMap = new Map<number, Milestone[]>();
+
+      if (projects && projects.length > 0) {
+        const milestonePromises = projects.map(async project => {
+          try {
+            const milestones = await getMilestonesByProjectID(sp, 'Milestone Details', project.Id);
+            return milestones || [];
+          } catch (milestoneError) {
+            console.error(`❌ Error fetching milestones for project ${project.Id}:`, milestoneError);
+            return [];
+          }
         });
-        return;
+
+        const milestonesResults = await Promise.all(milestonePromises);
+
+        // ✅ FIXED - Reassign without 'const'
+        allMilestones = milestonesResults.reduce(
+          (acc, curr) => acc.concat(curr),
+          [] as Milestone[]
+        );
+
+        // Group milestones by project ID
+        milestonesMap = new Map<number, Milestone[]>();
+        allMilestones.forEach(milestone => {
+          const projectId = parseInt(milestone.ProjectId || '0');
+          if (!milestonesMap.has(projectId)) milestonesMap.set(projectId, []);
+          milestonesMap.get(projectId)?.push(milestone);
+        });
       }
 
-      // 🔹 Fetch milestones for all projects in parallel
-      const milestonePromises = projects.map(async (project) => {
-        try {
-          const milestones = await getMilestonesByProjectID(sp, 'Milestone Details', project.Id);
-          return milestones || [];
-        } catch (milestoneError) {
-          console.error(`❌ Error fetching milestones for project ${project.Id}:`, milestoneError);
-          return [];
-        }
-      });
-
-      const milestonesResults = await Promise.all(milestonePromises);
-      const allMilestones: Milestone[] = milestonesResults.reduce(
-        (acc, curr) => acc.concat(curr),
-        [] as Milestone[]
-      );
-
-      // 🔹 Group milestones by project ID
-      const milestonesMap = new Map<number, Milestone[]>();
-      allMilestones.forEach(milestone => {
-        const projectId = parseInt(milestone.ProjectId || '0');
-        if (!milestonesMap.has(projectId)) {
-          milestonesMap.set(projectId, []);
-        }
-        milestonesMap.get(projectId)?.push(milestone);
-      });
+      // Fetch reminders
+      const rawReminders = await getMasterRespondersData(sp, "M_Responders");
+      const reminders: MasterResponder[] = rawReminders.map((item: any) => ({
+        Id: item.Id,
+        ResponderId: item.Responders?.Id || 0,
+        ResponderName: item.Responders?.Title || "Unknown",
+        ResponderEmail: item.Responders?.EMail || "",
+        Responded: item.Responded ?? false,
+        InitiatedDate: item.InitiatedDate,
+        RespondedDate: item.RespondedDate,
+      }));
 
       setDashboardData({
         projects,
-        milestones: allMilestones,
+        milestones: allMilestones,  // ✅ Now has data
         milestonesMap,
+        reminders: reminders || [],
         loading: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
       console.error('❌ Error fetching dashboard data:', error);
-      setDashboardData(prev => ({
-        ...prev,
-        loading: false,
-        error: 'Failed to load dashboard data'
-      }));
+      setDashboardData(prev => ({ ...prev, loading: false, error: 'Failed to load dashboard data' }));
       message.error('Failed to load dashboard data');
     }
   };
 
-  // ✅ Refresh dashboard data
-  const refreshDashboardData = () => {
-    fetchDashboardData();
-  };
+  // Refresh dashboard
+  const refreshDashboardData = () => fetchDashboardData();
 
-  // ✅ Fetch data on component mount
+  // Fetch on mount
   useEffect(() => {
-    if (sp) {
-      fetchDashboardData();
-    }
+    if (sp) fetchDashboardData();
   }, [sp]);
 
   return (
@@ -162,33 +172,35 @@ export default function ModernDashboard() {
       {/* Header */}
       <div className="header">
         <div className="welcomeSection">
-          <h1 className="welcomeTitle">Hello, {userName || "Loading..."}!!</h1>
+          <h1 className="welcomeTitle">Hello, {userName || 'Loading...'}!!</h1>
           <p className="welcomeSubtitle">Welcome, let's get back to work.</p>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <SummaryCards
-        projects={dashboardData.projects}
-        milestones={dashboardData.milestones}
-        loading={dashboardData.loading}
-      />
+      {/* Main Section */}
+      <div className="main-section">
+        <div className="left-section">
+          <SummaryCards
+            projects={dashboardData.projects}
+            milestones={dashboardData.milestones}
+            loading={dashboardData.loading}
+          />
+          <MilestoneChart
+            milestones={dashboardData.milestones}
+            projects={dashboardData.projects}
+            loading={dashboardData.loading}
+          />
+        </div>
 
-      {/* Main Content Grid */}
-      <div className="mainGrid">
-        <MilestoneChart
-          milestones={dashboardData.milestones}
-          projects={dashboardData.projects}
-          loading={dashboardData.loading}
-        />
-        <Notifications
-          milestones={dashboardData.milestones}
-          projects={dashboardData.projects}
-          loading={dashboardData.loading}
-        />
+        <div className="right-section">
+          {/* ✅ Updated: Notifications now uses reminders */}
+          <Notifications
+            reminders={dashboardData.reminders}
+            loading={dashboardData.loading}
+          />
+        </div>
       </div>
 
-      {/* Projects Table */}
       <ProjectsTable
         projects={dashboardData.projects}
         milestonesMap={dashboardData.milestonesMap}
@@ -197,5 +209,5 @@ export default function ModernDashboard() {
         onRefresh={refreshDashboardData}
       />
     </div>
-  )
+  );
 }

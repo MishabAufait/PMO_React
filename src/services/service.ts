@@ -39,6 +39,7 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
       .select(
         "Id","ProjectName","ProjectId","ProjectStartDate",
         "ProjectEndDate","Status","ProjectCost","Currency",
+        "CompanyName","Phase",
         "ProjectType","Department","Complexity","InvoiceNo","InvoiceDate",
         "ProjectManager/Id","ProjectManager/Title","ProjectManager/EMail"
       )
@@ -51,12 +52,14 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
   }
 };
 
+
+
 export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, projectId: number) => {
   try {
     const milestone = await sp.web.lists
       .getByTitle(libraryName)
       .items
-      .filter(`Id eq '${projectId}'`)
+      .filter(`ProjectId eq '${projectId}'`)
       .select(
         "Id","Title","Milestone","ProjectName","ProjectId",
         "MilestoneDueDate","InvoiceNo","Amount","Currency","ModuleAmount",
@@ -69,20 +72,45 @@ export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, pr
   }
 };
 
+export const getMasterRespondersData = async (sp: SPFI, libraryName: string) => {
+  try {
+    const responders = await sp.web.lists
+      .getByTitle(libraryName)
+      .items.select(
+        "Id",
+        "Responders/Id",
+        "Responders/Title",
+        "Responders/EMail",
+        "Responded",
+        "InitiatedDate",
+        "RespondedDate"
+      )
+      .expand("Responders")(); // Expand person field
+
+    return responders || [];
+  } catch (error) {
+    console.error("❌ Error in getMasterRespondersData service:", error);
+    throw error;
+  }
+};
+
 // ----------------------------- Project Payload & Services -----------------------------
 export interface CreateProjectPayload {
   ProjectName: string;
   ProjectId: string;
+  CompanyName: string;
   ProjectManagerId: number; // SharePoint Person field Id
   ProjectStartDate?: string;
   ProjectEndDate?: string;
   ProjectManagerEMail?: string;
   ProjectType: string;
-  Division: string;
+  Department: string;
   Status: string;
-  Priority: string;
+  Complexity: string;
   ProjectCost: number;
   Currency: string;
+  Region: string;
+  Phase: string;
   InvoiceNo?: string;
   InvoiceDate?: string;
 }

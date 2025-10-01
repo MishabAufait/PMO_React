@@ -1,16 +1,17 @@
 // Main card styles
 .notificationsCard {
-  border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #FFFFFF;
+  border: none;
+  box-shadow: none;
  
   :global(.ant-card-head) {
-    border-bottom: 1px solid #e5e7eb;
-    padding: 16px 20px;
+    border-bottom: none;
+    padding: 24px 24px 16px 24px;
   }
  
   :global(.ant-card-body) {
-    padding: 20px;
+    padding: 0 24px 24px 24px;
   }
 }
 
@@ -19,6 +20,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
   
   span {
     font-weight: 600;
@@ -33,38 +37,36 @@
 }
 
 .markAsRead {
-  color: #1677ff;
-  font-size: 12px;
+  color: #000000;
+  font-size: 14px;
   text-decoration: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 0;
+  border-radius: 0;
+  transition: opacity 0.2s ease;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
  
   &:hover {
-    color: #4096ff;
-    background-color: #f0f8ff;
+    color: #000000;
+    background-color: transparent;
+    opacity: 0.7;
   }
 }
 
 .clearAll {
-  color: #666;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #333;
-    background-color: #f5f5f5;
-  }
+  display: none; // Hidden in the new design
 }
 
 // Subtitle and badge
 .notificationsSubtitle {
   font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #6B7280;
+  background-color: #E5E7EB;
+  padding: 8px 16px;
+  margin: 0 -24px 0 -24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -84,8 +86,8 @@
 .notificationsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 400px;
+  gap: 0;
+  max-height: 500px;
   overflow-y: auto;
   
   &::-webkit-scrollbar {
@@ -93,160 +95,138 @@
   }
   
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
+    background: transparent;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: #E5E7EB;
     border-radius: 4px;
   }
   
   &::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: #D1D5DB;
   }
 }
 
 // Individual notification item
 .notificationItem {
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  gap: 16px;
+  padding: 16px 0;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 3px solid transparent;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #F3F4F6;
+  background-color: transparent;
   
   &:hover {
-    background-color: #f8f9fa;
-    transform: translateX(2px);
+    background-color: #F9FAFB;
+  }
+
+  &:last-child {
+    border-bottom: none;
   }
 }
 
-// Read/Unread states
+// Read/Unread states - minimal difference
 .unread {
-  background-color: #f6f8ff;
-  border-left-color: #1677ff;
+  background-color: transparent;
   
   .notificationTitle {
-    font-weight: 700;
+    font-weight: 600;
+    color: #111827;
   }
 }
 
 .read {
-  background-color: #f9fafb;
-  opacity: 0.8;
+  background-color: transparent;
   
   .notificationTitle {
     font-weight: 500;
+    color: #374151;
   }
-}
-
-// Priority styles
-.priority-high {
-  border-left-color: #ff4d4f !important;
   
-  &.unread {
-    background-color: #fff2f0;
+  .notificationMessage {
+    color: #9CA3AF;
   }
 }
 
-.priority-medium {
-  &.unread {
-    border-left-color: #fa8c16;
-  }
-}
-
+// Priority styles - removed visual indicators
+.priority-high,
+.priority-medium,
 .priority-low {
-  &.unread {
-    border-left-color: #52c41a;
-  }
+  border-left: none;
 }
 
 // Notification icon
 .notificationIcon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   flex-shrink: 0;
-  transition: all 0.2s ease;
-  
-  // Default background for different types will be handled by inline styles
-  background-color: #e6f7ff;
+  background-color: #F3F4F6;
+  color: #374151;
 }
 
 // Notification content
 .notificationContent {
   flex: 1;
-  min-width: 0; // Prevents flex item from overflowing
-}
-
-.notificationTitle {
-  font-size: 14px;
-  color: #1f2937;
-  margin-bottom: 4px;
-  line-height: 1.3;
+  min-width: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
 }
 
-.urgentDot {
-  color: #ff4d4f;
-  font-size: 8px;
-  animation: pulse 1.5s infinite;
+.notificationTitle {
+  font-size: 15px;
+  color: #111827;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.urgentDot {
+  display: none; // Hidden in new design
 }
 
 .notificationMessage {
-  font-size: 13px;
-  color: #6b7280;
-  line-height: 1.4;
-  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.5;
   word-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  
+  // Bold text for important parts
+  strong {
+    font-weight: 600;
+    color: #111827;
+  }
 }
 
 .notificationTime {
-  font-size: 12px;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  font-size: 13px;
+  color: #9CA3AF;
+  display: inline-block;
+  margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
 .projectTag {
-  background-color: #f0f0f0;
-  color: #666;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
-  border: 1px solid #e0e0e0;
+  display: none; // Hidden in the new minimal design
 }
 
 // Empty state
 .emptyState {
   text-align: center;
-  padding: 40px 20px;
-  color: #999;
+  padding: 60px 20px;
+  color: #9CA3AF;
   
   p {
     margin: 8px 0;
@@ -254,60 +234,68 @@
     &:first-of-type {
       font-size: 16px;
       font-weight: 500;
-      color: #666;
+      color: #6B7280;
     }
   }
   
-  .ant-icon {
+  :global(.anticon) {
     margin-bottom: 16px;
-    opacity: 0.5;
+    opacity: 0.3;
   }
 }
 
 .emptySubtext {
-  font-size: 12px;
-  color: #ccc;
+  font-size: 14px;
+  color: #D1D5DB;
   margin-top: 4px;
 }
 
 // Responsive design
 @media (max-width: 768px) {
   .notificationsCard {
+    :global(.ant-card-head) {
+      padding: 20px 16px 12px 16px;
+    }
+    
     :global(.ant-card-body) {
-      padding: 16px;
+      padding: 0 16px 16px 16px;
     }
   }
   
-  .notificationActions {
-    flex-direction: column;
-    gap: 4px;
+  .notificationsSubtitle {
+    margin: 0 -16px 0 -16px;
+    padding: 6px 12px;
+    font-size: 13px;
   }
   
   .notificationItem {
-    padding: 10px;
-    gap: 10px;
+    padding: 12px 0;
+    gap: 12px;
   }
   
   .notificationIcon {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  
+  .notificationTitle {
     font-size: 14px;
   }
   
   .notificationMessage {
-    font-size: 12px;
+    font-size: 13px;
   }
   
-  .projectTag {
-    font-size: 9px;
-    padding: 1px 4px;
+  .notificationTime {
+    font-size: 12px;
   }
 }
 
 // Loading state
 .notificationsCard {
   :global(.ant-skeleton) {
-    .ant-skeleton-content {
+    :global(.ant-skeleton-content) {
       padding: 0;
     }
   }

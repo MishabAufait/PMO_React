@@ -21,13 +21,7 @@ export default function Layout({ children }: Props) {
     >
       <Sidebar />
       <main style={{ flex: 1, padding: 0 }}>
-        <div
-          style={{
-            maxWidth: 1240,
-            margin: "0 auto",
-            padding: "20px 24px 32px",
-          }}
-        >
+        <div style={{ margin: '0 auto', padding: '20px 24px 32px' }}>
           {children}
         </div>
       </main>

@@ -31,16 +31,16 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
 
 export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: number) => {
   try {
-    const projects_list:any = await sp.web.lists
+    const projects_list: any = await sp.web.lists
       .getByTitle(libraryName)
       .items
-      .filter(`ProjectId eq '${projectId}'`)
+      .filter(`Id eq ${projectId}`)  // ✅ Removed quotes around number
       .select(
         "Id",
         "Title",
         "ProjectName",
-        "ProjectCode",       // check internal name
-        "Division",          // check internal name
+        "ProjectId",
+        "Department",
         "ProjectStartDate",
         "ProjectEndDate",
         "Status",
@@ -51,17 +51,35 @@ export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: n
         "ProjectManager/Title",
         "ProjectManager/EMail"
       )
-      .expand("ProjectManager");
+      .expand("ProjectManager")
+      .top(1)();  // ✅ Added top(1) and () to execute query
 
-    const project = projects_list[0] || {};
-    const projectOwner = project?.ProjectManager?.Title || "";
+    console.log(projects_list, "project__list");
 
-    console.log(projectOwner, "project owner")
-    console.log(project, "project asdfghjk")
+    if (!projects_list || projects_list.length === 0) {
+      console.warn("⚠️ No project found with ID:", projectId);
+      return null;
+    }
+
+    const project = projects_list[0];
+    const projectOwner = project?.ProjectManager || null;
+
+    console.log(projectOwner, "project owner");
+    console.log(project, "project data");
 
     return {
-      ...project,
-      projectOwner,
+      Id: project.Id,
+      Title: project.Title,
+      ProjectName: project.ProjectName,
+      ProjectId: project.ProjectId,
+      Department: project.Department,
+      ProjectStartDate: project.ProjectStartDate,
+      ProjectEndDate: project.ProjectEndDate,
+      Status: project.Status,
+      ProjectCost: project.ProjectCost,
+      Currency: project.Currency,
+      ProjectType: project.ProjectType,
+      projectOwner: projectOwner,  // ✅ Returns full object with Id, Title, EMail
     };
   } catch (err) {
     console.error("❌ Error in getProjectByID service:", err);

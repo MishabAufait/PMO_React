@@ -29,18 +29,17 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
     if (mode === 'edit' && initialValues) {
       console.log('Setting initial values for edit mode:', initialValues);
       setCurrentStatus(initialValues.Status);
+      
+      // For edit mode, just use the Title string for display in the disabled input
+      const projectManagerValue = typeof initialValues.ProjectManager === 'object' && initialValues.ProjectManager !== null
+        ? (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).Title
+        : undefined;
+      
       form.setFieldsValue({
         ProjectName: initialValues.ProjectName,
         ProjectId: initialValues.ProjectId,
         CompanyName: initialValues.CompanyName,
-        ProjectManager: typeof initialValues.ProjectManager === 'object' && initialValues.ProjectManager !== null
-          ? {
-            id: (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).Id,
-            displayName: (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).Title,
-            mail: (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).EMail,
-            userPrincipalName: (initialValues.ProjectManager as { Id: number; Title: string; EMail: string }).EMail
-          }
-          : undefined,
+        ProjectManager: projectManagerValue,
         ProjectStartDate: initialValues.ProjectStartDate ? dayjs(initialValues.ProjectStartDate) : undefined,
         ProjectEndDate: initialValues.ProjectEndDate ? dayjs(initialValues.ProjectEndDate) : undefined,
         ProjectType: initialValues.ProjectType,
@@ -56,8 +55,8 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
       });
     } else if (mode === 'create') {
       form.setFieldsValue({
-        Status: 'Planning',
-        Priority: 'Medium',
+        Phase: 'Planning',
+        Complexity: 'Medium',
         Currency: 'INR'
       });
     } else {
@@ -76,24 +75,38 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
 
       setSubmitting(true);
 
-      const graphUser = values.ProjectManager;
-      console.log('GraphUser object:', graphUser);
+      // In edit mode, ProjectManager is just a string (the name)
+      // In create mode, ProjectManager is the full graph user object
+      let graphUser;
+      let spUserId;
 
-      if (!graphUser || !graphUser.userPrincipalName) {
-        message.error('Please select a valid project manager');
-        setSubmitting(false);
-        return;
+      if (mode === 'edit' && initialValues?.ProjectManager) {
+        // For edit mode, use the original ProjectManager ID from initialValues
+        if (typeof initialValues.ProjectManager === 'object' && initialValues.ProjectManager !== null) {
+          spUserId = (initialValues.ProjectManager as { Id: number }).Id;
+          console.log('Using existing Project Manager ID from initialValues:', spUserId);
+        }
+      } else {
+        // For create mode, get the user from the form and ensure them
+        graphUser = values.ProjectManager;
+        console.log('GraphUser object:', graphUser);
+
+        if (!graphUser || !graphUser.userPrincipalName) {
+          message.error('Please select a valid project manager');
+          setSubmitting(false);
+          return;
+        }
+
+        const sp: SPFI = spfi().using(SPFx(contextValue.context));
+
+        // Ensure the user exists in SharePoint
+        const ensured = await sp.web.ensureUser(graphUser.userPrincipalName);
+        console.log('Ensured user:', ensured);
+        console.log('Ensured user ID:', ensured.Id);
+
+        // Get the SharePoint user ID
+        spUserId = ensured.Id;
       }
-
-      const sp: SPFI = spfi().using(SPFx(contextValue.context));
-
-      // Ensure the user exists in SharePoint
-      const ensured = await sp.web.ensureUser(graphUser.userPrincipalName);
-      console.log('Ensured user:', ensured);
-      console.log('Ensured user ID:', ensured.Id);
-
-      // Get the SharePoint user ID
-      const spUserId = ensured.Id;
 
       if (!spUserId || typeof spUserId !== 'number') {
         throw new Error('Failed to get valid SharePoint user ID');
@@ -198,11 +211,6 @@ export default function ProjectModal({ mode, initialValues, onClose, onSuccess }
           isReadOnly ? (
             <Input 
               disabled 
-              value={
-                typeof initialValues?.ProjectManager === 'object' && initialValues?.ProjectManager !== null
-                  ? (initialValues.ProjectManager as any).Title
-                  : ''
-              }
               placeholder="Project Manager"
             />
           ) : (

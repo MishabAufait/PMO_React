@@ -111,6 +111,7 @@ export default function Notifications({ reminders, loading }: NotificationsProps
           <span>Notifications</span>
         </div>
       }
+      style={{height:"612px"}}
       className={styles.notificationsCard}
       extra={
         unreadCount > 0 && (

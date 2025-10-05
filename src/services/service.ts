@@ -39,7 +39,7 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
       .select(
         "Id","ProjectName","ProjectId","ProjectStartDate",
         "ProjectEndDate","Status","ProjectCost","Currency",
-        "CompanyName","Phase",
+        "CompanyName","Phase","Region",
         "ProjectType","Department","Complexity","InvoiceNo","InvoiceDate",
         "ProjectManager/Id","ProjectManager/Title","ProjectManager/EMail"
       )

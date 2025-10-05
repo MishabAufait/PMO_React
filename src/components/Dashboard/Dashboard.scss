@@ -1,7 +1,6 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 24px;
   background: #f6f7fb;
   height: 100vh;
   overflow-y: auto;
@@ -56,7 +55,6 @@
 .left-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
 }
 
 .right-section {

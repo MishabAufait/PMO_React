@@ -29,7 +29,7 @@ interface Milestone {
   MilestonePercentage: string;
 }
 
-interface Project {
+export interface Project {
   Id: number;
   ProjectName: string;
   CompanyName: string;
@@ -41,6 +41,7 @@ interface Project {
   ProjectType: string;
   Department: string;
   Status: string;
+  Region: string;
   Complexity: string;
   ProjectCost: number;
   Currency: string;
@@ -161,6 +162,8 @@ export default function ModernDashboard() {
 
   // Refresh dashboard
   const refreshDashboardData = () => fetchDashboardData();
+
+  console.log(dashboardData,"dashboardData")
 
   // Fetch on mount
   useEffect(() => {

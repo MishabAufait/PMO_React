@@ -9,12 +9,14 @@ import {
   EditOutlined,
   DeleteOutlined,
   SearchOutlined,
-  FunnelPlotOutlined
+  FunnelPlotOutlined,
+  CloseOutlined
 } from '@ant-design/icons'
 import ProjectModal from '../CreateProjectModal'
 import { useNavigate } from 'react-router-dom'
 import { deleteProject } from '../../../services/service'
 import { spContext } from '../../../App';
+import { Project } from '../Index'
 
 const { Option } = Select
 
@@ -33,23 +35,6 @@ interface Milestone {
   MilestonePercentage: string;
 }
 
-interface Project {
-  Id: number;
-  ProjectName: string;
-  ProjectId: string;
-  ProjectManager: any;
-  ProjectStartDate: string;
-  ProjectEndDate?: string;
-  ProjectType: string;
-  Department: string;
-  Status: string;
-  Complexity: string;
-  ProjectCost: number;
-  Currency: string;
-  InvoiceNo: string;
-  InvoiceDate: string;
-}
-
 interface MappedProject {
   key: number;
   name: string;
@@ -64,14 +49,17 @@ interface MappedProject {
     Id: number;
     ProjectName: string;
     ProjectId: string;
+    CompanyName: string;
     ProjectStartDate: string;
     ProjectEndDate?: string;
     Status: string;
     ProjectCost: number;
     Currency: string;
     ProjectType: string;
-    Division: string;
-    Priority: string;
+    Department: string;
+    Region: string;
+    Phase: string;
+    Complexity: string;
     InvoiceNo?: string;
     InvoiceDate?: string;
     ProjectManager: any;
@@ -182,7 +170,7 @@ const mapProjectData = (projects: Project[], milestonesMap: Map<number, Mileston
       key: project.Id,
       name: project.ProjectName,
       currency: project.Currency,
-      status: project.Status === 'In Progress' ? 'Ongoing' : project.Status,
+      status: project.Status,
       amount: amountCurrencyCombiner(project.ProjectCost.toString(), project.Currency),
       milestonePct: milestoneData.percentage,
       milestoneStatus: milestoneData.status,
@@ -193,14 +181,17 @@ const mapProjectData = (projects: Project[], milestonesMap: Map<number, Mileston
         Id: project.Id,
         ProjectName: project.ProjectName,
         ProjectId: project.ProjectId,
+        CompanyName: project.CompanyName,
         ProjectStartDate: project.ProjectStartDate,
         ProjectEndDate: project.ProjectEndDate,
         Status: project.Status,
         ProjectCost: project.ProjectCost,
         Currency: project.Currency,
         ProjectType: project.ProjectType,
-        Division: project.Department,
-        Priority: project.Complexity,
+        Department: project.Department,
+        Region: project.Region,
+        Phase: project.Phase,
+        Complexity: project.Complexity,
         InvoiceNo: project.InvoiceNo,
         InvoiceDate: project.InvoiceDate,
         ProjectManager: project.ProjectManager
@@ -243,16 +234,26 @@ export default function ProjectsTable({
     }
   }, [projects, milestonesMap]);
 
+  console.log("selectedProject", selectedProject)
+
   // Filter projects based on search and filters
   const filteredProjects = useMemo(() => {
-    return projectData.filter(project => {
-      const matchesSearch = project.name.toLowerCase().includes(searchText.toLowerCase())
-      const matchesStatus = !filters.status || project.status.toLowerCase() === filters.status.toLowerCase()
-      const matchesMilestone = !filters.milestoneStatus || project.milestoneStatus.toLowerCase() === filters.milestoneStatus.toLowerCase()
+  return projectData.filter(project => {
+    const name = project?.name ?? '';
+    const status = project?.status ?? '';
+    const milestoneStatus = project?.milestoneStatus ?? '';
 
-      return matchesSearch && matchesStatus && matchesMilestone
-    })
-  }, [searchText, filters, projectData])
+    const matchesSearch = name.toLowerCase().includes(searchText.toLowerCase());
+    const matchesStatus =
+      !filters.status || status.toLowerCase() === filters.status.toLowerCase();
+    const matchesMilestone =
+      !filters.milestoneStatus ||
+      milestoneStatus.toLowerCase() === filters.milestoneStatus.toLowerCase();
+
+    return matchesSearch && matchesStatus && matchesMilestone;
+  });
+}, [searchText, filters, projectData]);
+
 
   const handleFilterApply = (values: any) => {
     setFilters({
@@ -275,6 +276,7 @@ export default function ProjectsTable({
   }
 
   const handleEditProject = (project: any) => {
+    console.log('Edit project clicked - originalData:', project.originalData);
     setSelectedProject(project.originalData)
     setEditDrawerVisible(true)
   }
@@ -303,7 +305,6 @@ export default function ProjectsTable({
     }
   }
 
-  // Table columns
   // Table columns
   const columns = [
     {
@@ -488,6 +489,7 @@ export default function ProjectsTable({
         pagination={{
           pageSize: 10,   // show 10 per page
           showSizeChanger: false, // hides page size dropdown (optional)
+          showQuickJumper: true
         }}
         bordered
         onRow={(record) => {
@@ -526,18 +528,21 @@ export default function ProjectsTable({
         >
           <Form.Item label="Project Status" name="status">
             <Select placeholder="Select status" allowClear>
-              <Option value="ongoing">Ongoing</Option>
-              <Option value="completed">Completed</Option>
-              <Option value="upcoming">Upcoming</Option>
+              <Option value="Planning">Planning</Option>
+              <Option value="In Progress">In Progress</Option>
+              <Option value="On Hold">On Hold</Option>
+              <Option value="Completed">Completed</Option>
+              <Option value="Delayed">Delayed</Option>
             </Select>
           </Form.Item>
 
           <Form.Item label="Milestone Status" name="milestoneStatus">
             <Select placeholder="Select milestone status" allowClear>
-              <Option value="on track">On track</Option>
-              <Option value="delayed">Delayed</Option>
-              <Option value="completed">Completed</Option>
-              <Option value="pending">Pending</Option>
+              <Option value="Not Started">Not Started</Option>
+              <Option value="In Progress">In Progress</Option>
+              <Option value="Completed">Completed</Option>
+              <Option value="On Hold">On Hold</Option>
+              <Option value="Cancelled">Cancelled</Option>
             </Select>
           </Form.Item>
 
@@ -571,11 +576,21 @@ export default function ProjectsTable({
 
       {/* Create Project Drawer */}
       <Drawer
-        title="Create Project"
         placement="right"
         width={500}
         onClose={() => setCreateDrawerVisible(false)}
         open={createDrawerVisible}
+        closable={false} // we'll handle the close button ourselves
+        title={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Create Project</span>
+            <Button
+              type="text"
+              icon={<CloseOutlined />}
+              onClick={() => setCreateDrawerVisible(false)}
+            />
+          </div>
+        }
       >
         <ProjectModal
           mode="create"
@@ -589,11 +604,21 @@ export default function ProjectsTable({
       </Drawer>
 
       <Drawer
-        title="Edit Project"
         placement="right"
         width={500}
         onClose={() => setEditDrawerVisible(false)}
         open={editDrawerVisible}
+        closable={false} // disable default close icon
+        title={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Edit Project</span>
+            <Button
+              type="text"
+              icon={<CloseOutlined />}
+              onClick={() => setEditDrawerVisible(false)}
+            />
+          </div>
+        }
       >
         <ProjectModal
           mode="edit"

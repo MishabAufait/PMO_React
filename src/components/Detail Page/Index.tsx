@@ -2,11 +2,7 @@ import * as React from "react";
 import { useState, useEffect, useContext } from "react";
 import styles from "./DetailsPage.module.scss";
 import { Card, Button, Tag, Avatar } from "antd";
-import {
-  EditOutlined,
-  InfoCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, PlusOutlined, ProfileOutlined } from "@ant-design/icons";
 import { spContext } from "../../App";
 import {
   getMilestonesByProjectID,
@@ -18,24 +14,19 @@ import CreateMilestoneModal from "./CreateMilestoneModal";
 import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
 
-// const moduleColumns = [
-//   { title: "Module Name", dataIndex: "Title", key: "Title" },
-//   { title: "Amount", dataIndex: "ModuleAmount", key: "ModuleAmount" },
-// ];
-
 interface IProject {
   Id: number;
   Title?: string;
   ProjectName?: string;
-  ProjectCode?: string;
-  projectOwner?: string; // updated property
+  ProjectId?: string;
+  projectOwner? : string;
   ProjectStartDate?: string;
   ProjectEndDate?: string;
   ProjectType?: string;
-  Division?: string;
-  ProjectStatus?: string;
+  Department?: string;
+  Status?: string;
   Priority?: string;
-  EstimatedCost?: number;
+  ProjectCost?: number;
   Currency?: string;
   InvoiceNo?: string;
   InvoiceDate?: string;
@@ -94,6 +85,8 @@ const ProjectDetails: React.FC = () => {
           "Project Details",
           Number(projectId)
         );
+
+        console.log(data, "project data id");
         setProject(data);
       } catch (error: any) {
         console.error("❌ Error fetching project:", error);
@@ -165,26 +158,6 @@ const DetailsPage: React.FC<{
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  console.log("🎨 DetailsPage component rendered with project:", project);
-  console.log("🎨 Project data for headers:", {
-    projectName: project?.ProjectName,
-    projectTitle: project?.Title,
-    projectCode: project?.ProjectId,
-    projectOwner: project?.projectOwner, // ✅ updated
-    projectStatus: project?.ProjectStatus,
-    projectType: project?.ProjectType,
-    division: project?.Department,
-    estimatedCost: project?.EstimatedCost,
-    currency: project?.Currency,
-    startDate: project?.ProjectStartDate,
-    endDate: project?.ProjectEndDate,
-  });
-
-  // const handleAddModule = (milestoneId: number) => {
-  //   setSelectedMilestoneId(milestoneId);
-  //   setIsModuleModalOpen(true);
-  // };
-
   const handleAddMilestone = () => {
     setIsEditMode(false);
     setSelectedMilestoneData(null);
@@ -224,7 +197,9 @@ const DetailsPage: React.FC<{
       {/* General Details Section */}
       <div className={styles.generalDetailsSection}>
         <div className={styles.sectionTitle}>
-          <InfoCircleOutlined />
+          <span className={styles.sectionImg}>
+            <ProfileOutlined />
+          </span>
           <span>General details</span>
         </div>
         <Card className={styles.generalDetailsCard}>
@@ -232,30 +207,33 @@ const DetailsPage: React.FC<{
             <div className={styles.detailsRow}>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project code</div>
-                <div className={styles.detailValue}>{project?.ProjectId}</div>
+                <div className={styles.detailValue}>{project?.ProjectId || '-'}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project owner</div>
                 <div className={styles.detailValue}>
-                  {project?.projectOwner}
-                </div>{" "}
-                {/* ✅ updated */}
+                  {project?.projectOwner || '-'}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Division</div>
-                <div className={styles.detailValue}>{project?.Department}</div>
+                <div className={styles.detailValue}>{project?.Department || '-'}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project type</div>
-                <div className={styles.detailValue}>{project?.ProjectType}</div>
+                <div className={styles.detailValue}>{project?.ProjectType || '-'}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Status</div>
-                <div className={styles.detailValue}>{project?.Status}</div>
+                <div className={styles.detailValue}>{project?.Status || '-'}</div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Estimated cost</div>
-                <div className={styles.detailValue}>{project?.ProjectCost}</div>
+                <div className={styles.detailValue}>
+                  {project?.Currency && project?.ProjectCost 
+                    ? `${project.Currency} ${project.ProjectCost}` 
+                    : '-'}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Estimated start date</div>
@@ -319,14 +297,15 @@ const DetailsPage: React.FC<{
                           {milestone.Milestone}
                         </h3>
                         <Tag
-                          color={
-                            dayjs(milestone.MilestoneDueDate).isBefore(
-                              dayjs(),
-                              "day"
-                            )
-                              ? "orange"
-                              : "green"
-                          }
+                          className={styles.milestoneTag}
+                          style={{
+                            backgroundColor: dayjs(
+                              milestone.MilestoneDueDate
+                            ).isBefore(dayjs(), "day")
+                              ? "#E79937"
+                              : "#43A047",
+                            color: "#fff",
+                          }}
                         >
                           {dayjs(milestone.MilestoneDueDate).isBefore(
                             dayjs(),

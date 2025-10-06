@@ -1,12 +1,13 @@
 import { SPFI } from "@pnp/sp";
-import "@pnp/sp/webs"
-import "@pnp/sp/lists"
-import "@pnp/sp/fields"
 import "@pnp/sp/webs";
-import '@pnp/sp/lists';
+import "@pnp/sp/lists";
+import "@pnp/sp/fields";
+import "@pnp/sp/webs";
+import "@pnp/sp/lists";
 import "@pnp/sp/files";
-import '@pnp/sp/folders';
+import "@pnp/sp/folders";
 import "@pnp/sp/profiles";
+import "@pnp/sp/items";
 
 // centralized error helper (used by data calls)
 const logAndRethrow = (err: unknown, context: string): never => {
@@ -14,33 +15,73 @@ const logAndRethrow = (err: unknown, context: string): never => {
   throw err instanceof Error ? err : new Error(`Failed in ${context}`);
 };
 
-
 export const getAllProjects = async (sp: SPFI, libraryName: string) => {
   try {
     const documents = await sp.web.lists
       .getByTitle(libraryName)
-      .items
-      .select("Id", "ProjectName", "ProjectId", "ProjectOwner", "ProjectStartDate", "ProjectEndDate", "ProjectType", "Division", "ProjectStatus", "Priority", "EstimatedCost", "Currency", "InvoiceNo", "InvoiceDate")
+      .items.select(
+        "Id",
+        "ProjectName",
+        "ProjectId",
+        "ProjectOwner",
+        "ProjectStartDate",
+        "ProjectEndDate",
+        "ProjectType",
+        "Division",
+        "ProjectStatus",
+        "Priority",
+        "EstimatedCost",
+        "Currency",
+        "InvoiceNo",
+        "InvoiceDate"
+      )
       .orderBy("Id", false)();
 
     return documents;
   } catch (err) {
-    logAndRethrow(err, 'getAllProjects');
+    logAndRethrow(err, "getAllProjects");
   }
 };
 
-export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: number) => {
+export const getAllProjectsName = async (sp: SPFI, libraryName: string) => {
   try {
-    const projects_list:any = await sp.web.lists
+    const documents = await sp.web.lists
       .getByTitle(libraryName)
-      .items
-      .filter(`ProjectId eq '${projectId}'`)
+      .items.select(
+        "Id",
+        "ProjectName",
+        "ProjectId",
+        "ProjectStartDate",
+        "ProjectEndDate",
+        "ProjectType",
+        "Department",
+        "Currency",
+        "InvoiceNo",
+        "InvoiceDate"
+      )
+      .orderBy("Id", false)();
+
+    return documents;
+  } catch (err) {
+    logAndRethrow(err, "getAllProjects");
+  }
+};
+
+export const getProjectByID = async (
+  sp: SPFI,
+  libraryName: string,
+  projectId: number
+) => {
+  try {
+    const [project] = await sp.web.lists
+      .getByTitle(libraryName)
+      .items.filter(`Id eq ${projectId}`)
       .select(
         "Id",
         "Title",
         "ProjectName",
-        "ProjectCode",       // check internal name
-        "Division",          // check internal name
+        "ProjectId",
+        "Department",
         "ProjectStartDate",
         "ProjectEndDate",
         "Status",
@@ -51,13 +92,12 @@ export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: n
         "ProjectManager/Title",
         "ProjectManager/EMail"
       )
-      .expand("ProjectManager");
-
-    const project = projects_list[0] || {};
+      .expand("ProjectManager")
+      .top(1)();
     const projectOwner = project?.ProjectManager?.Title || "";
 
-    console.log(projectOwner, "project owner")
-    console.log(project, "project asdfghjk")
+    console.log(projectOwner, "project owner");
+    console.log(project, "project details");
 
     return {
       ...project,
@@ -69,40 +109,76 @@ export const getProjectByID = async (sp: SPFI, libraryName: string, projectId: n
   }
 };
 
-
-
-export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, projectId: number) => {
+export const getMilestonesByProjectID = async (
+  sp: SPFI,
+  libraryName: string,
+  projectId: number
+) => {
   try {
-    const milestone = await sp.web.lists.getByTitle(libraryName)
+    const milestone = await sp.web.lists
+      .getByTitle(libraryName)
       .items.filter(`ProjectId eq '${projectId}'`)
-      .select("Id", "Title", "Milestone", "ProjectName", "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", "MilestoneTargetDate", "MilestoneStatus", "MilestonePercentage", "MilestoneDescription")();
+      .select(
+        "Id",
+        "Title",
+        "Milestone",
+        "ProjectName",
+        "MilestoneDueDate",
+        "InvoiceNo",
+        "Amount",
+        "Currency",
+        "MilestoneTargetDate",
+        "MilestoneStatus",
+        "MilestonePercentage",
+        "MilestoneDescription"
+      )();
     return milestone;
   } catch (error) {
     console.error("❌ Error in getMilestoneByProjectID service:", error);
     throw error;
   }
-}
+};
 
 export const getAllMilestones = async (sp: SPFI, libraryName: string) => {
   try {
     const documents = await sp.web.lists
       .getByTitle(libraryName)
-      .items
-      .select("Id", "Title", "Milestone", "ProjectName", "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", "MilestoneTargetDate", "MilestoneStatus", "MilestonePercentage", "Created", "MilestoneDescription", "MilestoneModule", "ModuleAmount")
+      .items.select(
+        "Id",
+        "Title",
+        "Milestone",
+        "ProjectName",
+        "MilestoneDueDate",
+        "InvoiceNo",
+        "Amount",
+        "Currency",
+        "MilestoneTargetDate",
+        "MilestoneStatus",
+        "MilestonePercentage",
+        "Created",
+        "MilestoneDescription",
+        "MilestoneModule",
+        "ModuleAmount"
+      )
       .orderBy("Id", false)();
     return documents;
   } catch (err) {
-    logAndRethrow(err, 'getAllMilestones');
+    logAndRethrow(err, "getAllMilestones");
   }
 };
 
-export const getModulesByMilestoneID = async (sp: SPFI, libraryName: string, MilestoneId: number) => {
+export const getModulesByMilestoneID = async (
+  sp: SPFI,
+  libraryName: string,
+  MilestoneId: number
+) => {
   try {
-    const modules = await sp.web.lists.getByTitle(libraryName)
+    const modules = await sp.web.lists
+      .getByTitle(libraryName)
       .items.filter(`MilestoneID eq '${MilestoneId}'`)
       .select("Id", "Title", "ModuleAmount")();
     return modules;
   } catch (err) {
-    logAndRethrow(err, 'getModulesByMilestoneID');
+    logAndRethrow(err, "getModulesByMilestoneID");
   }
-};  
+};

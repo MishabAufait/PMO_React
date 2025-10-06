@@ -2,11 +2,7 @@ import * as React from "react";
 import { useState, useEffect, useContext } from "react";
 import styles from "./DetailsPage.module.scss";
 import { Card, Button, Tag, Avatar } from "antd";
-import {
-  EditOutlined,
-  InfoCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, PlusOutlined, ProfileOutlined } from "@ant-design/icons";
 import { spContext } from "../../App";
 import {
   getMilestonesByProjectID,
@@ -224,7 +220,9 @@ const DetailsPage: React.FC<{
       {/* General Details Section */}
       <div className={styles.generalDetailsSection}>
         <div className={styles.sectionTitle}>
-          <InfoCircleOutlined />
+          <span className={styles.sectionImg}>
+            <ProfileOutlined />
+          </span>
           <span>General details</span>
         </div>
         <Card className={styles.generalDetailsCard}>
@@ -319,14 +317,15 @@ const DetailsPage: React.FC<{
                           {milestone.Milestone}
                         </h3>
                         <Tag
-                          color={
-                            dayjs(milestone.MilestoneDueDate).isBefore(
-                              dayjs(),
-                              "day"
-                            )
-                              ? "orange"
-                              : "green"
-                          }
+                          className={styles.milestoneTag}
+                          style={{
+                            backgroundColor: dayjs(
+                              milestone.MilestoneDueDate
+                            ).isBefore(dayjs(), "day")
+                              ? "#E79937"
+                              : "#43A047",
+                            color: "#fff",
+                          }}
                         >
                           {dayjs(milestone.MilestoneDueDate).isBefore(
                             dayjs(),
@@ -388,7 +387,13 @@ const DetailsPage: React.FC<{
                         <div className={styles.detailLabel}>
                           Milestone percentage
                         </div>
-                        <Tag color="green">
+                        <Tag
+                          className={styles.milestoneTag}
+                          style={{
+                            backgroundColor: "#43A047",
+                            color: "#fff",
+                          }}
+                        >
                           Completed: {milestone.MilestonePercentage}%
                         </Tag>
                       </div>

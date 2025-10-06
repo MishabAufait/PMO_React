@@ -9,7 +9,10 @@ type Props = {
 export default function Layout({ children }: Props) {
   const location = useLocation();
 
-  const isDetailsPage = location.pathname.startsWith("/details/");
+  const isDetailsPage =
+  location.pathname.startsWith("/details/") ||
+  location.pathname === "/weeklymilestone";
+
   return (
     <div
       style={{

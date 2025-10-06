@@ -23,7 +23,7 @@
 .generalDetailsSection {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .generalDetailsCard {
@@ -50,6 +50,16 @@
   }
 }
 
+.sectionImg {
+  background-color: #EBEEF4;
+    height: 16px;
+    width: 16px;
+    padding: 14px;
+    justify-content: center;
+    display: flex;
+    border-radius: 50%;
+}
+
 .detailsTable {
   width: 100%;
 }
@@ -67,6 +77,7 @@
   min-width: 120px;
   flex: 1;
   max-width: 150px;
+  align-items: flex-start;
 }
 
 .detailLabel {
@@ -114,7 +125,8 @@
   margin-right: -24px;
   margin-bottom: -32px;
   width: calc(100% + 48px);
-  max-height: calc(100vh - 200px);
+  // max-height: calc(100vh - 200px);
+  min-height: 200px;
   overflow-y: auto;
   overflow-x: hidden;
   
@@ -179,6 +191,62 @@
   margin-bottom: 12px;
 }
 
+.milestoneTag {
+    color: #fff;
+    border-radius: 40px;
+    padding: 2px 8px;
+}
+
+.milestoneCardSection1 {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.milestoneAccountSection {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 50%;
+}
+
+.milesctoneIconofHeader {
+  cursor: pointer;
+ display: flex;
+      align-items: self-end;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1); 
+  }
+
+  svg path {
+    transition: stroke 0.2s ease;
+  }
+}
+
+.weeklymilestoneCard {
+      background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.weeklymilestoneSection {
+  display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+.weeklymilestonebtn {
+  display: "flex";
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: end;
+}
+
 .creatorDetails {
   display: flex;
   flex-direction: column;
@@ -237,7 +305,7 @@
 
 .milestoneDetails {
   margin-bottom: 20px;
-  padding: 16px;
+  // padding: 16px;
   border-radius: 6px;
 }
 

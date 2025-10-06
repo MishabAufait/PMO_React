@@ -6,6 +6,7 @@ import Layout from './components/Layout/Index';
 import ModernDashboard from './components/Dashboard/Index';
 import ProjectDetails from './components/Detail Page/Index';
 import ReportpowerBi from './components/PowerBI/ReportpowerBi';
+import WeeklyMilestone from './components/Detail Page/WeeklyMilestone';
 
 export default function AppRouter() {
   const routes = [
@@ -14,6 +15,7 @@ export default function AppRouter() {
       children: [
         { path: '/', element: <ModernDashboard /> },
         { path: '/details/:projectId', element: <ProjectDetails /> },
+        { path: '/weeklymilestone', element: <WeeklyMilestone /> },
         { path: '/power-bi', element: <ReportpowerBi /> }, // <-- Power BI route
       ],
     },

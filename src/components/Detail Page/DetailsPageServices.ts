@@ -82,6 +82,8 @@ export const getProjectByID = async (
         "ProjectName",
         "ProjectId",
         "Department",
+        "ProjectId",
+        "Department",
         "ProjectStartDate",
         "ProjectEndDate",
         "Status",
@@ -100,8 +102,18 @@ export const getProjectByID = async (
     console.log(project, "project details");
 
     return {
-      ...project,
-      projectOwner,
+      Id: project.Id,
+      Title: project.Title,
+      ProjectName: project.ProjectName,
+      ProjectId: project.ProjectId,
+      Department: project.Department,
+      ProjectStartDate: project.ProjectStartDate,
+      ProjectEndDate: project.ProjectEndDate,
+      Status: project.Status,
+      ProjectCost: project.ProjectCost,
+      Currency: project.Currency,
+      ProjectType: project.ProjectType,
+      projectOwner: projectOwner,  // ✅ Returns full object with Id, Title, EMail
     };
   } catch (err) {
     console.error("❌ Error in getProjectByID service:", err);

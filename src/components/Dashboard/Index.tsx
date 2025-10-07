@@ -1,20 +1,24 @@
-import * as React from 'react';
-import { useState, useEffect, useContext } from 'react';
-import { message } from 'antd';
-import './Dashboard.scss';
+import * as React from "react";
+import { useState, useEffect, useContext } from "react";
+import { message } from "antd";
+import "./Dashboard.scss";
 
 // Components
-import SummaryCards from './SummaryCards/Index';
-import MilestoneChart from './MilestoneChart/Index';
-import Notifications from './Notifications/Index';
-import ProjectsTable from './ProjectsTable/Index';
+import SummaryCards from "./SummaryCards/Index";
+import Notifications from "./Notifications/Index";
+import ProjectsTable from "./ProjectsTable/Index";
 
 // Services and context
-import { spContext } from '../../App';
-import { getAllProjects, getMilestonesByProjectID, getMasterRespondersData } from '../../services/service';
+import { spContext } from "../../App";
+import {
+  getAllProjects,
+  getMilestonesByProjectID,
+  getMasterRespondersData,
+} from "../../services/service";
+import MilestoneDelayChart from "./MilestoneChart/Index";
 
 // Types
-interface Milestone {
+export interface Milestone {
   Id: number;
   ProjectId: string;
   Milestone: string;
@@ -79,7 +83,7 @@ export default function ModernDashboard() {
     error: null,
   });
 
-  const [userName, setUserName] = useState<string>('');
+  const [userName, setUserName] = useState<string>("");
 
   // Fetch current user
   useEffect(() => {
@@ -89,8 +93,8 @@ export default function ModernDashboard() {
         const user = await sp.web.currentUser();
         setUserName(user.Title);
       } catch (err) {
-        console.error('❌ Error fetching current user:', err);
-        setUserName('Guest');
+        console.error("❌ Error fetching current user:", err);
+        setUserName("Guest");
       }
     };
     fetchUser();
@@ -99,19 +103,26 @@ export default function ModernDashboard() {
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
-      setDashboardData(prev => ({ ...prev, loading: true, error: null }));
+      setDashboardData((prev) => ({ ...prev, loading: true, error: null }));
 
-      const projects = await getAllProjects(sp, 'Project Details') || [];
-      let allMilestones: Milestone[] = [];  // ✅ Declare once
+      const projects = (await getAllProjects(sp, "Project Details")) || [];
+      let allMilestones: Milestone[] = []; // ✅ Declare once
       let milestonesMap = new Map<number, Milestone[]>();
 
       if (projects && projects.length > 0) {
-        const milestonePromises = projects.map(async project => {
+        const milestonePromises = projects.map(async (project) => {
           try {
-            const milestones = await getMilestonesByProjectID(sp, 'Milestone Details', project.Id);
+            const milestones = await getMilestonesByProjectID(
+              sp,
+              "Milestone Details",
+              project.Id
+            );
             return milestones || [];
           } catch (milestoneError) {
-            console.error(`❌ Error fetching milestones for project ${project.Id}:`, milestoneError);
+            console.error(
+              `❌ Error fetching milestones for project ${project.Id}:`,
+              milestoneError
+            );
             return [];
           }
         });
@@ -126,8 +137,8 @@ export default function ModernDashboard() {
 
         // Group milestones by project ID
         milestonesMap = new Map<number, Milestone[]>();
-        allMilestones.forEach(milestone => {
-          const projectId = parseInt(milestone.ProjectId || '0');
+        allMilestones.forEach((milestone) => {
+          const projectId = parseInt(milestone.ProjectId || "0");
           if (!milestonesMap.has(projectId)) milestonesMap.set(projectId, []);
           milestonesMap.get(projectId)?.push(milestone);
         });
@@ -145,25 +156,33 @@ export default function ModernDashboard() {
         RespondedDate: item.RespondedDate,
       }));
 
+      console.log(
+        allMilestones,
+        "allMilestonesallMilestonesallMilestonesallMilestones-------"
+      );
       setDashboardData({
         projects,
-        milestones: allMilestones,  // ✅ Now has data
+        milestones: allMilestones, // ✅ Now has data
         milestonesMap,
         reminders: reminders || [],
         loading: false,
         error: null,
       });
     } catch (error) {
-      console.error('❌ Error fetching dashboard data:', error);
-      setDashboardData(prev => ({ ...prev, loading: false, error: 'Failed to load dashboard data' }));
-      message.error('Failed to load dashboard data');
+      console.error("❌ Error fetching dashboard data:", error);
+      setDashboardData((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Failed to load dashboard data",
+      }));
+      message.error("Failed to load dashboard data");
     }
   };
 
   // Refresh dashboard
   const refreshDashboardData = () => fetchDashboardData();
 
-  console.log(dashboardData,"dashboardData")
+  console.log(dashboardData, "dashboardData");
 
   // Fetch on mount
   useEffect(() => {
@@ -175,7 +194,7 @@ export default function ModernDashboard() {
       {/* Header */}
       <div className="header">
         <div className="welcomeSection">
-          <h1 className="welcomeTitle">Hello, {userName || 'Loading...'}!!</h1>
+          <h1 className="welcomeTitle">Hello, {userName || "Loading..."}!!</h1>
           <p className="welcomeSubtitle">Welcome, let's get back to work.</p>
         </div>
       </div>
@@ -188,10 +207,9 @@ export default function ModernDashboard() {
             milestones={dashboardData.milestones}
             loading={dashboardData.loading}
           />
-          <MilestoneChart
-            milestones={dashboardData.milestones}
-            projects={dashboardData.projects}
-            loading={dashboardData.loading}
+          <MilestoneDelayChart
+            milestones={dashboardData.milestones} // pass all fetched milestones
+            height={300}
           />
         </div>
 

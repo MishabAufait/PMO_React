@@ -55,6 +55,8 @@ interface IModule {
   ModuleAmount: number;
 }
 
+
+
 // Main component to fetch project details
 const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<IProject | null>(null);

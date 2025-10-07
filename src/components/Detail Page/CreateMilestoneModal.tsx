@@ -16,6 +16,7 @@ type Props = {
   milestoneData?: any; // Data for editing existing milestone
   isEditMode?: boolean;
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
+  isReadOnly?: boolean;
 };
 
 const statusOptions = [
@@ -26,10 +27,11 @@ const statusOptions = [
   { value: 'Cancelled', label: 'Cancelled' },
 ];
 
-export default function CreateMilestoneModal({ open, onClose, onCreated, onEdited, ProjectId, ProjectName, milestoneData, isEditMode = false, setTrigger }: Props) {
+export default function CreateMilestoneModal({ open, onClose, onCreated, onEdited, ProjectId, ProjectName, milestoneData, isEditMode = false, setTrigger, isReadOnly = false, }: Props) {
   const { sp } = useContext(spContext);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+
 
   // Prefill form when in edit mode
   useEffect(() => {
@@ -70,14 +72,15 @@ export default function CreateMilestoneModal({ open, onClose, onCreated, onEdite
         MilestoneDescription: values.MilestoneDescription,
         MilestoneDueDate: values.MilestoneDueDate ? values.MilestoneDueDate.toDate() : null,
         MilestoneTargetDate: values.MilestoneTargetDate ? values.MilestoneTargetDate.toDate() : null,
-        Amount: values.MilestoneAmount ? values.MilestoneAmount.toString() : '0',
-        Currency: '₹',
+        Amount: values.Amount ? values.Amount.toString() : '0',
+        Currency: values.Currency,
         MilestoneStatus: values.Status,
         MilestonePercentage: values.MilestonePercentage ? values.MilestonePercentage.toString() : '0',
         ProjectName: ProjectName?.toString(),
         ProjectId: ProjectId?.toString(),
         Created: new Date().toISOString(),
         InvoiceNo: '', // Add empty InvoiceNo field as it's in the interface
+        
       };
       
       console.log("Payload being sent:", payload);
@@ -162,18 +165,48 @@ export default function CreateMilestoneModal({ open, onClose, onCreated, onEdite
           />
         </Form.Item>
 
-        <Form.Item 
-          label="Milestone amount" 
-          name="MilestoneAmount" 
-          rules={[{ required: true, message: 'Enter milestone amount' }]}
-        >
-          <InputNumber 
-            style={{ width: '100%' }} 
-            min={0} 
-            placeholder="Enter the milestone amount" 
-            prefix="₹"
-          />
-        </Form.Item>
+        <Form.Item
+        label="Estimated budget"
+        required
+      >
+        <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+          <Form.Item
+            name="Currency"
+            noStyle
+            rules={[{ required: true, message: "Please select currency" }]}
+          >
+            <Select
+              style={{ width: 100 }}
+              placeholder="$"
+              disabled={isReadOnly}
+              options={[
+                { value: "INR", label: "INR (₹)" },
+                { value: "USD", label: "USD ($)" },
+                { value: "EUR", label: "EUR (€)" },
+                { value: "GBP", label: "GBP (£)" },
+                { value: "AED", label: "AED (AED)" },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="Amount"
+            noStyle
+            rules={[{ required: true, message: "Please enter project cost" }]}
+          >
+            <InputNumber<number>
+              style={{ flex: 1 }}
+              min={0}
+              placeholder="Enter amount"
+              disabled={isReadOnly}
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
+              parser={(value) => Number(value!.replace(/\$\s?|(,*)/g, ""))}
+            />
+          </Form.Item>
+        </div>
+      </Form.Item>
 
         <Form.Item 
           label="Status" 

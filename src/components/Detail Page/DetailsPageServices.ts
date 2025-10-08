@@ -150,6 +150,7 @@ export const getMilestonesByProjectID = async (
         "MilestoneDescription",
         "BurnedAmount",
         "Currency",
+        "Status"
       )();
     return milestone;
   } catch (error) {

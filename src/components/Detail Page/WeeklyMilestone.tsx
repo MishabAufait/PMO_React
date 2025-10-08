@@ -59,10 +59,12 @@ const WeeklyMilestone: React.FC = () => {
 
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [selectedProject, setSelectedProject] = useState<IProjectDetails | null>(null);
+  const [userProjects, setUserProjects] = useState<IProjectDetails[]>([]);
   const [milestoneOptions, setMilestoneOptions] = useState<ProjectOption[]>([]);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isMilestoneSubmitModalOpen, setMilestoneSubmitModalOpen] = useState(false);
+  const [showBurnedAmount, setShowBurnedAmount] = useState(false);
 
   const [form] = Form.useForm();
 
@@ -78,22 +80,24 @@ const WeeklyMilestone: React.FC = () => {
 
       const allProjects = await getAllProjectsName(sp, "Project Details") ?? [];
 
-      console.log(allProjects,currentUser,userEmail)
+      console.log(allProjects, currentUser, userEmail);
 
-      const userProjects = allProjects.filter(
+      const filteredProjects = allProjects.filter(
         (proj) => proj.ProjectManager?.EMail?.toLowerCase() === userEmail
       );
 
+      setUserProjects(filteredProjects);
+
       setProjectOptions(
-        userProjects.map((proj) => ({
+        filteredProjects.map((proj) => ({
           value: proj.Id,
           label: proj.ProjectName,
         })) || []
       );
 
       // Optionally select the first project
-      if (userProjects.length > 0) {
-        setSelectedProject(userProjects[0]);
+      if (filteredProjects.length > 0) {
+        setSelectedProject(filteredProjects[0]);
       }
     } catch (error) {
       console.error("Error fetching project data:", error);
@@ -107,27 +111,31 @@ const WeeklyMilestone: React.FC = () => {
       "Milestone Details",
       projectId
     );
+
+    console.log(milestones,"milestones")
+
     setMilestoneOptions(
-      milestones?.map((m) => ({
-        value: m.Id,
-        label: m.Milestone,
-        milestoneDueDate: m.MilestoneDueDate,
-        milestoneTargetDate: m.MilestoneTargetDate,
-      })) || []
+      milestones
+        ?.filter((m) => m.Status !== "Completed") // 👈 exclude completed ones
+        .map((m) => ({
+          value: m.Id,
+          label: m.Milestone,
+          milestoneDueDate: m.MilestoneDueDate,
+          milestoneTargetDate: m.MilestoneTargetDate,
+        })) || []
     );
+
   };
 
   // Handle project selection
   const handleProjectChange = (projectId: number) => {
-    const project = projectOptions.find((p) => p.value === projectId);
+    const project = userProjects.find((p) => p.Id === projectId);
     if (project) {
-      setSelectedProject({
-        Id: project.value as number,
-        ProjectName: project.label,
-      });
+      setSelectedProject(project);
     }
     setMilestoneOptions([]);
     setSelectedMilestoneId(null);
+    setShowBurnedAmount(false);
     form.resetFields();
     setIsFormOpen(true);
     fetchMilestoneData(projectId);
@@ -146,6 +154,14 @@ const WeeklyMilestone: React.FC = () => {
           ? dayjs(selected.milestoneTargetDate)
           : null,
       });
+    }
+  };
+
+  // Handle status change to show/hide burned amount field
+  const handleStatusChange = (status: string) => {
+    setShowBurnedAmount(status === "Completed");
+    if (status !== "Completed") {
+      form.setFieldsValue({ BurnedAmount: null });
     }
   };
 
@@ -175,7 +191,7 @@ const WeeklyMilestone: React.FC = () => {
         MilestonePercentage: values.MilestonePercentage
           ? values.MilestonePercentage.toString()
           : "0",
-        Responded: true,
+        BurnedAmount: values.BurnedAmount || null
       };
 
       // Update the Milestone Details list
@@ -186,35 +202,52 @@ const WeeklyMilestone: React.FC = () => {
 
       // --- Update M_Responders list based on selectedProject ProjectManager ---
       if (selectedProject?.ProjectManager?.EMail) {
-        const pmEmail = selectedProject.ProjectManager.EMail;
+        const pmEmail = selectedProject.ProjectManager.EMail.toLowerCase();
 
-        const responders = await sp.web.lists
+        // Get all responders with Status = 'Ongoing' and Responded = 0
+        const allResponders = await sp.web.lists
           .getByTitle("M_Responders")
-          .items.filter(`PMEmail eq '${pmEmail}' and Responded eq false and Status eq 'Ongoing'`)
-          .get();
+          .items
+          .filter(`Responded eq 0 and Status eq 'Ongoing'`)
+          .select("Id", "PMEmail")
+          .top(5000)();
+
+        // Filter case-insensitively on client side
+        const responders = allResponders.filter(
+          (r: any) => r.PMEmail?.toLowerCase() === pmEmail
+        ).slice(0, 2); // Take only 2
 
         if (responders.length > 0) {
-          for (const responder of responders) {
-            await sp.web.lists
+          const batch = sp.web.createBatch();
+
+          responders.forEach((responder: any) => {
+            sp.web.lists
               .getByTitle("M_Responders")
               .items.getById(responder.Id)
-              .update({ Responded: "Yes" });
-          }
+              .inBatch(batch)
+              .update({
+                Responded: true,
+                Status: "Completed"
+              });
+          });
+
+          await batch.execute();
         }
       }
 
       message.success("Milestone and responders updated successfully");
       setIsFormOpen(false);
       setMilestoneSubmitModalOpen(false);
+      setShowBurnedAmount(false);
       form.resetFields();
     } catch (error: any) {
       message.error(error?.message || "Error updating milestone");
     }
   };
 
-
   const handleCancel = () => {
     setIsFormOpen(false);
+    setShowBurnedAmount(false);
     form.resetFields();
   };
 
@@ -335,7 +368,10 @@ const WeeklyMilestone: React.FC = () => {
                   </Form.Item>
 
                   <Form.Item label="Status" name="Status">
-                    <Select placeholder="Select the status">
+                    <Select
+                      placeholder="Select the status"
+                      onChange={handleStatusChange}
+                    >
                       {statusOptions.map((option) => (
                         <Option key={option.value} value={option.value}>
                           {option.label}
@@ -343,6 +379,17 @@ const WeeklyMilestone: React.FC = () => {
                       ))}
                     </Select>
                   </Form.Item>
+
+                  {showBurnedAmount && (
+                    <Form.Item label="Burned Amount" name="BurnedAmount">
+                      <InputNumber
+                        style={{ width: "100%" }}
+                        min={0}
+                        placeholder="Enter burned amount"
+                        prefix={selectedProject?.Currency || "$"}
+                      />
+                    </Form.Item>
+                  )}
 
                   <Form.Item label="Milestone Percentage" name="MilestonePercentage">
                     <InputNumber

@@ -22,7 +22,8 @@ type Props = {
   onEdited?: () => void;
   ProjectId?: number;
   ProjectName?: string;
-  milestoneData?: any; // Data for editing existing milestone
+  ProjectCurrency: any;
+  milestoneData?: any;
   isEditMode?: boolean;
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
   isReadOnly?: boolean;
@@ -43,6 +44,7 @@ export default function CreateMilestoneModal({
   onEdited,
   ProjectId,
   ProjectName,
+  ProjectCurrency,
   milestoneData,
   isEditMode = false,
   setTrigger,
@@ -54,11 +56,10 @@ export default function CreateMilestoneModal({
   const status = Form.useWatch("Status", form);
 
   useEffect(() => {
-  if (status === "Completed") {
-    form.setFieldsValue({ MilestonePercentage: 100 });
-  }
-}, [status, form]);
-
+    if (status === "Completed") {
+      form.setFieldsValue({ MilestonePercentage: 100 });
+    }
+  }, [status, form]);
 
   // Prefill form when in edit mode
   useEffect(() => {
@@ -67,9 +68,6 @@ export default function CreateMilestoneModal({
       const formValues = {
         MilestoneName: milestoneData.Milestone || milestoneData.Title,
         MilestoneDescription: milestoneData.MilestoneDescription,
-        MilestoneDueDate: milestoneData.MilestoneDueDate
-          ? dayjs(milestoneData.MilestoneDueDate)
-          : null,
         MilestoneTargetDate: milestoneData.MilestoneTargetDate
           ? dayjs(milestoneData.MilestoneTargetDate)
           : null,
@@ -80,20 +78,35 @@ export default function CreateMilestoneModal({
         MilestonePercentage: milestoneData.MilestonePercentage
           ? milestoneData.MilestonePercentage.toString()
           : "0",
-        Currency: milestoneData.Currency,
+        Currency: ProjectCurrency,
         Amount: milestoneData.Amount,
+        
+        // MilestoneDueDate: milestoneData.MilestoneDueDate
+        //   ? dayjs(milestoneData.MilestoneDueDate)
+        //   : null,
       };
-      console.log("Form values being set:", formValues);
-
       // Use setTimeout to ensure form is ready
       setTimeout(() => {
         form.setFieldsValue(formValues);
       }, 100);
     } else if (!isEditMode && open) {
-      // Clear form when creating new milestone
-      form.resetFields();
+      // ✅ Clear other fields but prefill currency with ProjectCurrency
+      form.resetFields([
+        "MilestoneName",
+        "MilestoneDescription",
+        "Amount",
+        "MilestoneTargetDate",
+        "Status",
+        "MilestonePercentage",
+        "BurnedAmount",
+      ]);
+
+      // ✅ Set ProjectCurrency as default for new milestone
+      form.setFieldsValue({
+        Currency: ProjectCurrency || "INR", // fallback if ProjectCurrency undefined
+      });
     }
-  }, [isEditMode, milestoneData, open, form]);
+  }, [isEditMode, milestoneData, open, form, ProjectCurrency]);
 
   const handleSubmit = async () => {
     try {
@@ -106,17 +119,17 @@ export default function CreateMilestoneModal({
       );
       console.log("Project ID:", ProjectId);
 
-const completionDate =
-      values.Status === "Completed" ? new Date().toISOString() : null;
+      const completionDate =
+        values.Status === "Completed" ? new Date().toISOString() : null;
 
       // Create milestone payload
       const payload = {
         Title: values.MilestoneName, // SharePoint requires Title field
         Milestone: values.MilestoneName,
         MilestoneDescription: values.MilestoneDescription,
-        MilestoneDueDate: values.MilestoneDueDate
-          ? values.MilestoneDueDate.toDate()
-          : null,
+        // MilestoneDueDate: values.MilestoneDueDate
+        //   ? values.MilestoneDueDate.toDate()
+        //   : null,
         MilestoneTargetDate: values.MilestoneTargetDate
           ? values.MilestoneTargetDate.toDate()
           : null,
@@ -130,7 +143,9 @@ const completionDate =
         ProjectId: ProjectId?.toString(),
         Created: new Date().toISOString(),
         InvoiceNo: "", // Add empty InvoiceNo field as it's in the interface
-        BurnedAmount: values.BurnedAmount ? values.BurnedAmount.toString() : "0",
+        BurnedAmount: values.BurnedAmount
+          ? values.BurnedAmount.toString()
+          : "0",
         MilestoneCompletionDate: completionDate,
       };
 
@@ -198,7 +213,7 @@ const completionDate =
           />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label="Milestone due date"
           name="MilestoneDueDate"
           rules={[{ required: true, message: "Select milestone due date" }]}
@@ -209,7 +224,7 @@ const completionDate =
             format="DD/MM/YYYY"
             disabled={isEditMode}
           />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item
           label="Milestone target date"
@@ -226,6 +241,7 @@ const completionDate =
 
         <Form.Item label="Estimated budget" required>
           <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+            {/* ✅ Currency field prefilled with project currency and disabled */}
             <Form.Item
               name="Currency"
               noStyle
@@ -233,18 +249,12 @@ const completionDate =
             >
               <Select
                 style={{ width: 100 }}
-                placeholder="$"
-                disabled={isEditMode}
-                options={[
-                  { value: "INR", label: "INR (₹)" },
-                  { value: "USD", label: "USD ($)" },
-                  { value: "EUR", label: "EUR (€)" },
-                  { value: "GBP", label: "GBP (£)" },
-                  { value: "AED", label: "AED (AED)" },
-                ]}
+                placeholder={ProjectCurrency}
+                disabled={true}
               />
             </Form.Item>
 
+            {/* Amount input field */}
             <Form.Item
               name="Amount"
               noStyle
@@ -301,14 +311,9 @@ const completionDate =
               >
                 <Select
                   style={{ width: 100 }}
-                  placeholder="$"
-                  options={[
-                    { value: "INR", label: "INR (₹)" },
-                    { value: "USD", label: "USD ($)" },
-                    { value: "EUR", label: "EUR (€)" },
-                    { value: "GBP", label: "GBP (£)" },
-                    { value: "AED", label: "AED (AED)" },
-                  ]}
+                  value={ProjectCurrency}
+                  disabled={true} 
+                  options={[{ value: ProjectCurrency, label: ProjectCurrency }]}
                 />
               </Form.Item>
 

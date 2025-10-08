@@ -68,6 +68,7 @@ const ProjectDetails: React.FC = () => {
   const [trigger, setTrigger] = useState(false);
   const { projectId } = useParams();
 
+
   useEffect(() => {
     if (!sp || !projectId) {
       console.log("❌ SP or projectId not available:", {
@@ -232,6 +233,17 @@ const DetailsPage: React.FC<{
     setSelectedMilestoneData(null);
   };
 
+    // Calculate total burned amount across milestones
+  const totalBurned = milestones.reduce(
+    (sum, m) => sum + (m.BurnedAmount || 0),
+    0
+  );
+
+  // Calculate benefit only if project and cost exist
+  const projectBenefit =
+    project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
+
+
   const handleModuleCreated = () => console.log("Module created successfully");
   const handleMilestoneCreated = () =>
     console.log("Milestone created successfully");
@@ -313,12 +325,16 @@ const DetailsPage: React.FC<{
                     : "-"}
                 </div>
               </div>
-              <div className={styles.detailColumn}>
-                <div className={styles.detailLabel}>Division</div>
-                <div className={styles.detailValue}>
-                  {project?.Department || "-"}
+              {project?.Status === "Completed" && (
+                <div className={styles.detailColumn}>
+                  <div className={styles.detailLabel}>Project Benefit</div>
+                  <div className={styles.detailValue}>
+                    {projectBenefit != null
+                      ? formatAmount(projectBenefit, project?.Currency)
+                      : "-"}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </Card>
@@ -506,6 +522,7 @@ const DetailsPage: React.FC<{
         onEdited={handleMilestoneEdited}
         ProjectId={project?.Id}
         ProjectName={project?.ProjectName}
+        ProjectCurrency={project?.Currency}
         milestoneData={selectedMilestoneData}
         isEditMode={isEditMode}
         setTrigger={setTrigger}

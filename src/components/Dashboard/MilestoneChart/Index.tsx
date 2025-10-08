@@ -24,6 +24,7 @@ export interface MilestoneChartItem {
   MilestoneDueDate: string; // due date from backend
   MilestoneTargetDate?: string; // planned/actual completion date
   MilestoneStatus?: string; // Pending / In Progress / Completed
+  MilestoneCompletionDate: string; // actual completion date
 }
 
 // ---------------------------
@@ -50,11 +51,12 @@ const renderValueLabel = (props: any) => {
 
   // For positive (red/delayed) → position above the top of the bar
   // For negative (green/early) → position below the bottom of the bar
-  const adjustedY = value > 0 
-    ? y - 6  // Above red bar
-    : value < 0 
-    ? y + Math.abs(height) - 24 // Below green bar (height is negative, so we use abs and add offset)
-    : y - 6;  // Above blue bar (on-time)
+  const adjustedY =
+    value > 0
+      ? y - 6 // Above red bar
+      : value < 0
+      ? y + height -6  // Below green bar (height is negative, so we use abs and add offset)
+      : y - 6; // Above blue bar (on-time)
 
   return (
     <text
@@ -69,7 +71,6 @@ const renderValueLabel = (props: any) => {
     </text>
   );
 };
-
 // ---------------------------
 // Component
 // ---------------------------
@@ -81,16 +82,26 @@ export default function MilestoneDelayChart({
   height?: number;
 }) {
   // transform milestones into chart data
-   // transform milestones into chart data
+  // transform milestones into chart data
   const data = useMemo(() => {
     return milestones.map((m, idx) => {
       const projectLabel = m.ProjectName || `Project-${idx + 1}`;
       const milestoneLabel = m.Milestone || `M-${idx + 1}`;
-      const combinedLabel = `${projectLabel} - ${milestoneLabel}`;
-      const delay = calculateDelayDays(
-        m.MilestoneDueDate,
-        m.MilestoneTargetDate
+      const combinedLabel = `${projectLabel}\n${milestoneLabel}`;
+
+      console.log(
+        `Milestone: ${combinedLabel}`,
+        "\nTarget Date:",
+        m.MilestoneTargetDate,
+        "\nCompletion Date:",
+        m.MilestoneCompletionDate
       );
+
+      const delay = calculateDelayDays(
+        m.MilestoneTargetDate, // due/planned date
+        m.MilestoneCompletionDate // actual completion date
+      );
+
       return {
         milestone: combinedLabel,
         delay,
@@ -112,7 +123,10 @@ export default function MilestoneDelayChart({
   }
 
   return (
-    <Card title="Milestone Tracking" style={{ borderRadius: 10, height:"440px" }}>
+    <Card
+      title="Milestone Tracking"
+      style={{ borderRadius: 10, height: "440px" }}
+    >
       <div className="main-div" style={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -131,7 +145,7 @@ export default function MilestoneDelayChart({
 
             <XAxis
               dataKey="milestone"
-              angle={-90}
+              angle={-40}
               textAnchor="end"
               interval={0}
               height={60}

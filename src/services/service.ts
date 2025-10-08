@@ -21,7 +21,7 @@ export const getAllMilestones = async (sp: SPFI, libraryName: string) => {
       .select(
         "Id", "Title", "Milestone", "ProjectName", 
         "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", 
-        "MilestoneTargetDate", "MilestoneStatus", "MilestonePercentage"
+        "MilestoneTargetDate", "MilestoneStatus", "MilestonePercentage", "MilestoneCompletionDate"
       )
       .orderBy("Id", false)(); // latest first
 
@@ -63,7 +63,7 @@ export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, pr
       .select(
         "Id","Title","Milestone","ProjectName","ProjectId",
         "MilestoneDueDate","InvoiceNo","Amount","Currency","ModuleAmount",
-        "MilestoneTargetDate","MilestoneStatus","MilestonePercentage"
+        "MilestoneTargetDate","MilestoneStatus","MilestonePercentage","MilestoneCompletionDate"
       )();
     return milestone;
   } catch (error) {

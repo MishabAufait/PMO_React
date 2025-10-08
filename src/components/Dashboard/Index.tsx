@@ -31,6 +31,7 @@ export interface Milestone {
   MilestoneTargetDate: string;
   MilestoneStatus: string;
   MilestonePercentage: string;
+  MilestoneCompletionDate: string;
 }
 
 export interface Project {

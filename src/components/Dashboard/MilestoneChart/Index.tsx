@@ -7,7 +7,7 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
+  // Tooltip,
   LabelList,
   CartesianGrid,
   ReferenceLine,
@@ -48,7 +48,7 @@ const renderValueLabel = (props: any) => {
   const cx = x + width / 2;
 
   // For positive → above bar; for negative → below bar
-  const adjustedY = value >= 0 ? y - 6 : y + Math.abs(height) + 14;
+  const adjustedY = value >= 0 ? y - 6 : y + Math.abs(height) + 6;
 
   return (
     <text
@@ -104,7 +104,7 @@ export default function MilestoneDelayChart({
 
   return (
     <Card title="Milestone Tracking" style={{ borderRadius: 10, height:"440px" }}>
-      <div style={{ width: "100%", height }}>
+      <div className="main-div" style={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -122,11 +122,11 @@ export default function MilestoneDelayChart({
 
             <XAxis
               dataKey="milestone"
-              angle={-40}
+              angle={-90}
               textAnchor="end"
               interval={0}
               height={60}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 10 }}
             />
 
             <YAxis
@@ -142,10 +142,10 @@ export default function MilestoneDelayChart({
               }}
             />
 
-            <Tooltip
+            {/* <Tooltip
               formatter={(value: any) => [`${value} days`, "Delay"]}
               labelFormatter={(label) => `${label}`}
-            />
+            /> */}
 
             <Bar
               dataKey="delay"

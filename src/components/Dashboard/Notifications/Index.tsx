@@ -1,11 +1,8 @@
-import * as React from 'react';
-import { useState, useMemo } from 'react';
-import styles from './Notifications.module.scss';
-import { Card, Skeleton } from 'antd';
-import {
-  BellOutlined,
-  CheckOutlined
-} from '@ant-design/icons';
+import * as React from "react";
+import { useState, useMemo } from "react";
+import styles from "./Notifications.module.scss";
+import { Card, Skeleton } from "antd";
+import { BellOutlined, CheckOutlined } from "@ant-design/icons";
 
 // Types
 interface ReminderItem {
@@ -29,12 +26,19 @@ interface NotificationItem {
   title: string;
   message: string;
   time: string;
-  type: 'reminder';
+  type: "reminder";
   isRead: boolean;
 }
 
-export default function Notifications({ reminders, loading }: NotificationsProps) {
-  const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
+export default function Notifications({
+  reminders,
+  loading,
+}: NotificationsProps) {
+  const [readNotifications, setReadNotifications] = useState<Set<string>>(
+    new Set()
+  );
+
+  console.log("🚀 Notifications props - reminders:", reminders);
 
   // Utility to show relative time
   function timeAgo(dateString: string): string {
@@ -64,18 +68,35 @@ export default function Notifications({ reminders, loading }: NotificationsProps
 
     // Only include reminders that have not been responded
     reminders
-      .filter(reminder => !reminder.Responded)
+      .filter((reminder) => !reminder.Responded)
       .forEach((reminder, index) => {
         const relativeInitiatedTime = timeAgo(reminder.InitiatedDate);
+
+        // format the ISO InitiatedDate into readable string
+        const initiatedDateFormatted = reminder.InitiatedDate
+          ? new Date(reminder.InitiatedDate).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "Unknown date";
+
+        const messageHTML = `
+      The Weekly Milestone & Deliverable Update, scheduled for 
+      <strong>${initiatedDateFormatted}</strong>, was due from 
+      <strong>${reminder.ResponderName}</strong>.
+    `;
+    
+console.log("Reminder message:", messageHTML);
 
         notificationsList.push({
           id: `reminder-${index}`,
           icon: <BellOutlined />,
-          title: 'Weekly Milestone & Deliverable Update Reminder',
-          message: `The Weekly Milestone & Deliverable Update, scheduled for <strong>${new Date(reminder.InitiatedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong>, was due from <strong>${reminder.ResponderName}</strong>.`,
+          title: "Weekly Milestone & Deliverable Update Reminder",
+          message: messageHTML,
           time: relativeInitiatedTime,
-          type: 'reminder',
-          isRead: readNotifications.has(`reminder-${index}`)
+          type: "reminder",
+          isRead: readNotifications.has(`reminder-${index}`),
         });
       });
 
@@ -84,17 +105,19 @@ export default function Notifications({ reminders, loading }: NotificationsProps
 
   // Mark notification as read
   const markAsRead = (notificationId: string) => {
-    setReadNotifications(prev => new Set([...Array.from(prev), notificationId]));
+    setReadNotifications(
+      (prev) => new Set([...Array.from(prev), notificationId])
+    );
   };
 
   // Mark all notifications as read
   const markAllAsRead = () => {
-    const allIds = notifications.map(n => n.id);
+    const allIds = notifications.map((n) => n.id);
     setReadNotifications(new Set(allIds));
   };
 
   // Get notification counts
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   if (loading) {
     return (
@@ -111,15 +134,12 @@ export default function Notifications({ reminders, loading }: NotificationsProps
           <span>Notifications</span>
         </div>
       }
-      style={{height:"612px"}}
+      style={{ height: "612px" }}
       className={styles.notificationsCard}
       extra={
         unreadCount > 0 && (
           <div className={styles.notificationActions}>
-            <span
-              onClick={markAllAsRead}
-              className={styles.markAsRead}
-            >
+            <span onClick={markAllAsRead} className={styles.markAsRead}>
               <CheckOutlined /> Mark as read
             </span>
           </div>
@@ -128,7 +148,7 @@ export default function Notifications({ reminders, loading }: NotificationsProps
     >
       {notifications.length === 0 ? (
         <div className={styles.emptyState}>
-          <BellOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+          <BellOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />
           <p>No notifications</p>
           <p className={styles.emptySubtext}>All caught up!</p>
         </div>
@@ -138,7 +158,9 @@ export default function Notifications({ reminders, loading }: NotificationsProps
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`${styles.notificationItem} ${notification.isRead ? styles.read : styles.unread}`}
+                className={`${styles.notificationItem} ${
+                  notification.isRead ? styles.read : styles.unread
+                }`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className={styles.notificationIcon}>
@@ -147,7 +169,9 @@ export default function Notifications({ reminders, loading }: NotificationsProps
                 <div className={styles.notificationContent}>
                   <div className={styles.notificationTitle}>
                     <span>{notification.title}</span>
-                    <span className={styles.notificationTime}>{notification.time}</span>
+                    <span className={styles.notificationTime}>
+                      {notification.time}
+                    </span>
                   </div>
                   <div
                     className={styles.notificationMessage}

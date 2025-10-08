@@ -132,6 +132,7 @@ const WeeklyMilestone: React.FC = () => {
         MilestonePercentage: values.MilestonePercentage
           ? values.MilestonePercentage.toString()
           : "0",
+        Responded: true,
       };
 
       await sp.web.lists

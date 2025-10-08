@@ -142,7 +142,9 @@ export const getMilestonesByProjectID = async (
         "MilestoneTargetDate",
         "MilestoneStatus",
         "MilestonePercentage",
-        "MilestoneDescription"
+        "MilestoneDescription",
+        "BurnedAmount",
+        "Currency",
       )();
     return milestone;
   } catch (error) {

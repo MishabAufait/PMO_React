@@ -155,10 +155,11 @@ export default function ModernDashboard() {
         InitiatedDate: item.InitiatedDate,
         RespondedDate: item.RespondedDate,
       }));
+      
 
       console.log(
         allMilestones,
-        "allMilestonesallMilestonesallMilestonesallMilestones-------"
+        "--allMilestonesallMilestonesallMilestonesallMilestones--"
       );
       setDashboardData({
         projects,

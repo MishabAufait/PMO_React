@@ -19,7 +19,7 @@ interface IProject {
   Title?: string;
   ProjectName?: string;
   ProjectId?: string;
-  projectOwner? : string;
+  projectOwner?: string;
   ProjectStartDate?: string;
   ProjectEndDate?: string;
   ProjectType?: string;
@@ -47,6 +47,7 @@ interface IMilestone {
   MilestoneTargetDate: string;
   MilestoneStatus: string;
   MilestonePercentage: number;
+  BurnedAmount: number;
 }
 
 interface IModule {
@@ -54,8 +55,6 @@ interface IModule {
   Title: string;
   ModuleAmount: number;
 }
-
-
 
 // Main component to fetch project details
 const ProjectDetails: React.FC = () => {
@@ -106,6 +105,8 @@ const ProjectDetails: React.FC = () => {
           Number(projectId)
         );
         setMilestones(milestonesData);
+
+        console.log("-------milestonesData------", milestonesData);
 
         const modulesMap: Record<number, IModule[]> = {};
         for (const milestone of milestonesData) {
@@ -160,6 +161,54 @@ const DetailsPage: React.FC<{
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // Helper fn for amount formatting
+  const formatAmount = (value?: number, currency?: string) => {
+    if (value == null) return "-";
+    return `${currency ?? ""} ${value.toLocaleString("en-IN")}`;
+  };
+
+  const amountCurrencyCombiner = (amount: string, currency: string): string => {
+    const numAmount = parseFloat(amount);
+
+    if (isNaN(numAmount)) return amount;
+
+    const formatCurrency = (value: number, currencyCode: string): string => {
+      switch (currencyCode) {
+        case "INR":
+          // Indian Rupee formatting with lakhs and crores
+          if (value >= 10000000) {
+            return `₹${(value / 10000000).toFixed(2)} Cr`;
+          } else if (value >= 100000) {
+            return `₹${(value / 100000).toFixed(2)} L`;
+          } else if (value >= 1000) {
+            return `₹${(value / 1000).toFixed(2)} K`;
+          } else {
+            return `₹${value.toLocaleString("en-IN")}`;
+          }
+        case "USD":
+          if (value >= 1000000) {
+            return `$${(value / 1000000).toFixed(2)}M`;
+          } else if (value >= 1000) {
+            return `$${(value / 1000).toFixed(2)}K`;
+          } else {
+            return `$${value.toLocaleString("en-US")}`;
+          }
+        case "EUR":
+          if (value >= 1000000) {
+            return `€${(value / 1000000).toFixed(2)}M`;
+          } else if (value >= 1000) {
+            return `€${(value / 1000).toFixed(2)}K`;
+          } else {
+            return `€${value.toLocaleString("de-DE")}`;
+          }
+        default:
+          return `${currencyCode} ${value.toLocaleString()}`;
+      }
+    };
+
+    return formatCurrency(numAmount, currency);
+  };
+
   const handleAddMilestone = () => {
     setIsEditMode(false);
     setSelectedMilestoneData(null);
@@ -209,32 +258,43 @@ const DetailsPage: React.FC<{
             <div className={styles.detailsRow}>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project code</div>
-                <div className={styles.detailValue}>{project?.ProjectId || '-'}</div>
+                <div className={styles.detailValue}>
+                  {project?.ProjectId || "-"}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project owner</div>
                 <div className={styles.detailValue}>
-                  {project?.projectOwner || '-'}
+                  {project?.projectOwner || "-"}
                 </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Division</div>
-                <div className={styles.detailValue}>{project?.Department || '-'}</div>
+                <div className={styles.detailValue}>
+                  {project?.Department || "-"}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Project type</div>
-                <div className={styles.detailValue}>{project?.ProjectType || '-'}</div>
+                <div className={styles.detailValue}>
+                  {project?.ProjectType || "-"}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Status</div>
-                <div className={styles.detailValue}>{project?.Status || '-'}</div>
+                <div className={styles.detailValue}>
+                  {project?.Status || "-"}
+                </div>
               </div>
               <div className={styles.detailColumn}>
                 <div className={styles.detailLabel}>Estimated cost</div>
                 <div className={styles.detailValue}>
-                  {project?.Currency && project?.ProjectCost 
-                    ? `${project.Currency} ${project.ProjectCost}` 
-                    : '-'}
+                  {project?.Currency && project?.ProjectCost != null
+                    ? amountCurrencyCombiner(
+                        project.ProjectCost.toString(),
+                        project.Currency
+                      )
+                    : "-"}
                 </div>
               </div>
               <div className={styles.detailColumn}>
@@ -251,6 +311,12 @@ const DetailsPage: React.FC<{
                   {project?.ProjectEndDate
                     ? dayjs(project.ProjectEndDate).format("DD/MM/YYYY")
                     : "-"}
+                </div>
+              </div>
+              <div className={styles.detailColumn}>
+                <div className={styles.detailLabel}>Division</div>
+                <div className={styles.detailValue}>
+                  {project?.Department || "-"}
                 </div>
               </div>
             </div>
@@ -326,6 +392,12 @@ const DetailsPage: React.FC<{
                       icon={<EditOutlined />}
                       className={styles.editButton}
                       onClick={() => handleEditMilestone(milestone)}
+                      disabled={milestone.MilestoneStatus === "Completed"} // ✅ Disable if completed
+                      title={
+                        milestone.MilestoneStatus === "Completed"
+                          ? "Completed milestone cannot be edited"
+                          : ""
+                      }
                     />
                   </div>
 
@@ -336,7 +408,7 @@ const DetailsPage: React.FC<{
                           Milestone amount
                         </div>
                         <div className={styles.detailValue}>
-                          ₹{milestone.Amount}
+                          {formatAmount(milestone.Amount, milestone.Currency)}
                         </div>
                       </div>
                       <div className={styles.detailColumn}>
@@ -372,6 +444,15 @@ const DetailsPage: React.FC<{
                         <Tag color="green">
                           Completed: {milestone.MilestonePercentage}%
                         </Tag>
+                      </div>
+                      <div className={styles.detailColumn}>
+                        <div className={styles.detailLabel}>Burned Amount</div>
+                        <div className={styles.detailValue}>
+                          {formatAmount(
+                            milestone.BurnedAmount,
+                            milestone.Currency
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

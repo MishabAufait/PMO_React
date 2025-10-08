@@ -20,6 +20,25 @@ import dayjs from "dayjs";
 
 const { Option } = Select;
 
+// Interface for Project Details
+interface IProjectDetails {
+  Id: number;
+  ProjectName: string;
+  ProjectId?: string;
+  ProjectStartDate?: string;
+  ProjectEndDate?: string;
+  ProjectType?: string;
+  Department?: string;
+  Currency?: string;
+  InvoiceNo?: string;
+  InvoiceDate?: string;
+  ProjectManager?: {
+    Id: number;
+    Title: string;
+    EMail: string;
+  };
+}
+
 type ProjectOption = {
   value: number | string;
   label: string;
@@ -39,28 +58,46 @@ const WeeklyMilestone: React.FC = () => {
   const { sp } = useContext(spContext);
 
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+  const [selectedProject, setSelectedProject] = useState<IProjectDetails | null>(null);
   const [milestoneOptions, setMilestoneOptions] = useState<ProjectOption[]>([]);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(
-    null
-  );
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  // const [isDisabled, setIsDisabled] = useState(true);
-  const [isMilestoneSubmitModalOpen, setMilestoneSubmitModalOpen] =
-    useState(false);
+  const [isMilestoneSubmitModalOpen, setMilestoneSubmitModalOpen] = useState(false);
+
+  const [form] = Form.useForm();
 
   const handleConfirmMilestoneSubmit = () => {
     setMilestoneSubmitModalOpen(true);
   };
 
-  const [form] = Form.useForm();
-
   // Fetch all projects
   const fetchProjectData = async () => {
-    const projects = await getAllProjectsName(sp, "Project Details");
-    setProjectOptions(
-      projects?.map((proj) => ({ value: proj.Id, label: proj.ProjectName })) ||
-        []
-    );
+    try {
+      const currentUser = await sp.web.currentUser();
+      const userEmail = currentUser.Email?.toLowerCase();
+
+      const allProjects = await getAllProjectsName(sp, "Project Details") ?? [];
+
+      console.log(allProjects,currentUser,userEmail)
+
+      const userProjects = allProjects.filter(
+        (proj) => proj.ProjectManager?.EMail?.toLowerCase() === userEmail
+      );
+
+      setProjectOptions(
+        userProjects.map((proj) => ({
+          value: proj.Id,
+          label: proj.ProjectName,
+        })) || []
+      );
+
+      // Optionally select the first project
+      if (userProjects.length > 0) {
+        setSelectedProject(userProjects[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching project data:", error);
+    }
   };
 
   // Fetch milestones for selected project
@@ -82,11 +119,17 @@ const WeeklyMilestone: React.FC = () => {
 
   // Handle project selection
   const handleProjectChange = (projectId: number) => {
+    const project = projectOptions.find((p) => p.value === projectId);
+    if (project) {
+      setSelectedProject({
+        Id: project.value as number,
+        ProjectName: project.label,
+      });
+    }
     setMilestoneOptions([]);
     setSelectedMilestoneId(null);
     form.resetFields();
     setIsFormOpen(true);
-    // setIsDisabled(true);
     fetchMilestoneData(projectId);
   };
 
@@ -135,13 +178,32 @@ const WeeklyMilestone: React.FC = () => {
         Responded: true,
       };
 
+      // Update the Milestone Details list
       await sp.web.lists
         .getByTitle("Milestone Details")
         .items.getById(selectedMilestoneId)
         .update(payload);
 
-      message.success("Milestone updated successfully");
-      // setIsDisabled(false);
+      // --- Update M_Responders list based on selectedProject ProjectManager ---
+      if (selectedProject?.ProjectManager?.EMail) {
+        const pmEmail = selectedProject.ProjectManager.EMail;
+
+        const responders = await sp.web.lists
+          .getByTitle("M_Responders")
+          .items.filter(`PMEmail eq '${pmEmail}' and Responded eq false and Status eq 'Ongoing'`)
+          .get();
+
+        if (responders.length > 0) {
+          for (const responder of responders) {
+            await sp.web.lists
+              .getByTitle("M_Responders")
+              .items.getById(responder.Id)
+              .update({ Responded: "Yes" });
+          }
+        }
+      }
+
+      message.success("Milestone and responders updated successfully");
       setIsFormOpen(false);
       setMilestoneSubmitModalOpen(false);
       form.resetFields();
@@ -149,6 +211,7 @@ const WeeklyMilestone: React.FC = () => {
       message.error(error?.message || "Error updating milestone");
     }
   };
+
 
   const handleCancel = () => {
     setIsFormOpen(false);
@@ -170,14 +233,6 @@ const WeeklyMilestone: React.FC = () => {
         <h1 className={styles.companyName}>
           Weekly Milestone & Deliverable Update
         </h1>
-        {/* <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleSaveMilestone}
-          disabled={isDisabled}
-        >
-          Update Milestone
-        </Button> */}
       </div>
 
       <div className={styles.milestoneCardsContainer}>
@@ -266,17 +321,16 @@ const WeeklyMilestone: React.FC = () => {
                       style={{ width: "100%" }}
                       placeholder="DD/MM/YYYY"
                       format="DD/MM/YYYY"
+                      disabled
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    label="Milestone Target Date"
-                    name="MilestoneTargetDate"
-                  >
+                  <Form.Item label="Milestone Target Date" name="MilestoneTargetDate">
                     <DatePicker
                       style={{ width: "100%" }}
                       placeholder="DD/MM/YYYY"
                       format="DD/MM/YYYY"
+                      disabled
                     />
                   </Form.Item>
 
@@ -290,10 +344,7 @@ const WeeklyMilestone: React.FC = () => {
                     </Select>
                   </Form.Item>
 
-                  <Form.Item
-                    label="Milestone Percentage"
-                    name="MilestonePercentage"
-                  >
+                  <Form.Item label="Milestone Percentage" name="MilestonePercentage">
                     <InputNumber
                       style={{ width: "100%" }}
                       min={0}

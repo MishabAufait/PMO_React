@@ -57,8 +57,12 @@ export const getAllProjectsName = async (sp: SPFI, libraryName: string) => {
         "Department",
         "Currency",
         "InvoiceNo",
-        "InvoiceDate"
+        "InvoiceDate",
+        "ProjectManager/Id",
+        "ProjectManager/Title",
+        "ProjectManager/EMail"
       )
+      .expand("ProjectManager")
       .orderBy("Id", false)();
 
     return documents;
@@ -66,6 +70,7 @@ export const getAllProjectsName = async (sp: SPFI, libraryName: string) => {
     logAndRethrow(err, "getAllProjects");
   }
 };
+
 
 export const getProjectByID = async (
   sp: SPFI,

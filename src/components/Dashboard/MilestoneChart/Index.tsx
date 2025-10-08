@@ -19,6 +19,7 @@ import {
 export interface MilestoneChartItem {
   Id: number;
   ProjectId: string | number;
+  ProjectName: string;
   Milestone: string;
   MilestoneDueDate: string; // due date from backend
   MilestoneTargetDate?: string; // planned/actual completion date
@@ -47,8 +48,13 @@ const renderValueLabel = (props: any) => {
   const { x, y, width, height, value } = props;
   const cx = x + width / 2;
 
-  // For positive → above bar; for negative → below bar
-  const adjustedY = value >= 0 ? y - 6 : y + Math.abs(height) + 6;
+  // For positive (red/delayed) → position above the top of the bar
+  // For negative (green/early) → position below the bottom of the bar
+  const adjustedY = value > 0 
+    ? y - 6  // Above red bar
+    : value < 0 
+    ? y + Math.abs(height) - 24 // Below green bar (height is negative, so we use abs and add offset)
+    : y - 6;  // Above blue bar (on-time)
 
   return (
     <text
@@ -75,15 +81,18 @@ export default function MilestoneDelayChart({
   height?: number;
 }) {
   // transform milestones into chart data
+   // transform milestones into chart data
   const data = useMemo(() => {
     return milestones.map((m, idx) => {
-      const label = m.Milestone || `M-${idx + 1}`;
+      const projectLabel = m.ProjectName || `Project-${idx + 1}`;
+      const milestoneLabel = m.Milestone || `M-${idx + 1}`;
+      const combinedLabel = `${projectLabel} - ${milestoneLabel}`;
       const delay = calculateDelayDays(
         m.MilestoneDueDate,
         m.MilestoneTargetDate
       );
       return {
-        milestone: label,
+        milestone: combinedLabel,
         delay,
         fill: getBarColor(delay),
       };

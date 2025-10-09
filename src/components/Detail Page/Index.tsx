@@ -5,6 +5,7 @@ import { Card, Button, Tag, Avatar } from "antd";
 import { EditOutlined, PlusOutlined, ProfileOutlined } from "@ant-design/icons";
 import { spContext } from "../../App";
 import {
+  fetchProgressionHistory,
   getMilestonesByProjectID,
   getProjectByID,
 } from "./DetailsPageServices";
@@ -12,6 +13,7 @@ import CreateModuleModal from "./CreateModuleModal";
 import CreateMilestoneModal from "./CreateMilestoneModal";
 import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
+import MilestoneVarianceChart, { ProjectVarianceItem } from "./VarianceGraph";
 
 interface IProject {
   Id: number;
@@ -53,6 +55,7 @@ interface IMilestone {
 const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<IProject | null>(null);
   const [milestones, setMilestones] = useState<IMilestone[]>([]);
+  const [varianceData, setVarianceData] = useState<ProjectVarianceItem[]>([]);
 
   const [loading, setLoading] = useState(true);
   const { sp } = useContext(spContext);
@@ -60,6 +63,7 @@ const ProjectDetails: React.FC = () => {
   const { projectId } = useParams();
 
   useEffect(() => {
+
     if (!sp || !projectId) {
       console.log("❌ SP or projectId not available:", {
         sp: !!sp,
@@ -77,7 +81,9 @@ const ProjectDetails: React.FC = () => {
           "Project Details",
           Number(projectId)
         );
-
+        console.log(data.ProjectId,"iddddddddddddddddddddddddddddddddd")
+        const varianceData = await fetchProgressionHistory(sp, data.ProjectId || '');
+        setVarianceData(varianceData);
         console.log(data, "project data id");
         setProject(data);
       } catch (error: any) {
@@ -121,6 +127,7 @@ const ProjectDetails: React.FC = () => {
       }
     };
 
+
     fetchData();
     fetchModulesForMilestones();
   }, [sp, projectId, trigger]);
@@ -131,6 +138,7 @@ const ProjectDetails: React.FC = () => {
     <DetailsPage
       project={project}
       milestones={milestones}
+      varianceData={varianceData}
       setTrigger={setTrigger}
     />
   );
@@ -140,8 +148,9 @@ const ProjectDetails: React.FC = () => {
 const DetailsPage: React.FC<{
   project: IProject | null;
   milestones: IMilestone[];
+  varianceData: ProjectVarianceItem[];
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ project, milestones, setTrigger }) => {
+}> = ({ project, milestones, setTrigger,varianceData }) => {
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<
@@ -230,41 +239,41 @@ const DetailsPage: React.FC<{
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
 
-const totalBurned = React.useMemo(() => {
-  if (!milestones || milestones.length === 0) return 0;
-  return milestones.reduce((sum, m) => sum + (m.BurnedAmount || 0), 0);
-}, [milestones]);
+  const totalBurned = React.useMemo(() => {
+    if (!milestones || milestones.length === 0) return 0;
+    return milestones.reduce((sum, m) => sum + (m.BurnedAmount || 0), 0);
+  }, [milestones]);
 
-const projectBenefit =
-  project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
+  const projectBenefit =
+    project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
 
-console.log("-------totalBurned------", totalBurned);
-console.log("-------projectBenefit------", projectBenefit);
+  console.log("-------totalBurned------", totalBurned);
+  console.log("-------projectBenefit------", projectBenefit);
 
-// --- Store ProjectBenefit to SharePoint automatically ---
-useEffect(() => {
-  const updateProjectBenefit = async () => {
-    if (!sp || !project?.Id || projectBenefit == null) return;
-    if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
+  // --- Store ProjectBenefit to SharePoint automatically ---
+  useEffect(() => {
+    const updateProjectBenefit = async () => {
+      if (!sp || !project?.Id || projectBenefit == null) return;
+      if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
 
-    try {
-      console.log("💾 Updating ProjectBenefit in SharePoint:", projectBenefit);
+      try {
+        console.log("💾 Updating ProjectBenefit in SharePoint:", projectBenefit);
 
-      await sp.web.lists
-        .getByTitle("Project Details")
-        .items.getById(project.Id)
-        .update({
-          ProjectBenefit: projectBenefit,
-        });
+        await sp.web.lists
+          .getByTitle("Project Details")
+          .items.getById(project.Id)
+          .update({
+            ProjectBenefit: projectBenefit,
+          });
 
-      console.log("✅ ProjectBenefit updated successfully!");
-    } catch (error) {
-      console.error("❌ Error updating ProjectBenefit:", error);
-    }
-  };
+        console.log("✅ ProjectBenefit updated successfully!");
+      } catch (error) {
+        console.error("❌ Error updating ProjectBenefit:", error);
+      }
+    };
 
-  updateProjectBenefit();
-}, [sp, project?.Id, milestones, projectBenefit]);
+    updateProjectBenefit();
+  }, [sp, project?.Id, milestones, projectBenefit]);
 
   const handleExcelUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -357,9 +366,9 @@ useEffect(() => {
                 <div className={styles.detailValue}>
                   {project?.Currency && project?.ProjectCost != null
                     ? amountCurrencyCombiner(
-                        project.ProjectCost.toString(),
-                        project.Currency
-                      )
+                      project.ProjectCost.toString(),
+                      project.Currency
+                    )
                     : "-"}
                 </div>
               </div>
@@ -419,6 +428,8 @@ useEffect(() => {
           </div>
         </Card>
       </div>
+
+      <MilestoneVarianceChart data={varianceData} projectCost={project?.ProjectCost ?? 0} />
 
       {/* Milestone Progress Section */}
       <div className={styles.milestoneSection}>

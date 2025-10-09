@@ -8,6 +8,7 @@ import "@pnp/sp/files";
 import "@pnp/sp/folders";
 import "@pnp/sp/profiles";
 import "@pnp/sp/items";
+import { ProjectVarianceItem } from "./VarianceGraph";
 
 // centralized error helper (used by data calls)
 const logAndRethrow = (err: unknown, context: string): never => {
@@ -177,8 +178,6 @@ export const getAllMilestones = async (sp: SPFI, libraryName: string) => {
         "MilestonePercentage",
         "Created",
         "MilestoneDescription",
-        "MilestoneModule",
-        "ModuleAmount"
       )
       .orderBy("Id", false)();
     return documents;
@@ -200,5 +199,36 @@ export const getModulesByMilestoneID = async (
     return modules;
   } catch (err) {
     logAndRethrow(err, "getModulesByMilestoneID");
+  }
+};
+
+export const fetchProgressionHistory = async (sp: any, projectId: string) => {
+  try {
+    
+    // Fetch items filtered by ProjectId (correct method chaining)
+    const items: any[] = await sp.web.lists.getByTitle("ProgressionHistory").items
+      .filter(`ProjectId eq '${projectId}'`)
+      .select(
+        "ProjectId",
+        "CompletionPercentage",
+        "BurnedAmount"
+      )
+      .orderBy("CompletionPercentage", true)();
+
+    console.log("📊 Progression History raw data:", items);
+    
+    // Map data to the format required by MilestoneVarianceChart
+    const mappedData: ProjectVarianceItem[] = items.map((item: any) => ({
+      ProjectId: item.ProjectId || projectId,
+      projectPercentage: parseFloat(item.CompletionPercentage) || 0,
+      BurningAmount: parseFloat(item.BurnedAmount) || 0,
+    }));
+
+    console.log("✅ Mapped variance data:", mappedData);
+    return mappedData;
+    
+  } catch (error) {
+    console.error("❌ Error fetching progression history:", error);
+    return [];
   }
 };

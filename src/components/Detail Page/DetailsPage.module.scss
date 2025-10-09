@@ -4,8 +4,8 @@
   gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
-  overflow: hidden;
-  max-height: 100vh;
+  // overflow: hidden;
+  // max-height: 100vh;
 }
 
 .companyHeader {
@@ -101,7 +101,7 @@
   flex-direction: column;
   gap: 20px;
   flex: 1;
-  min-height: 0;
+  // min-height: 0;
 }
 
 .milestoneHeader {

@@ -6,7 +6,6 @@ import { EditOutlined, PlusOutlined, ProfileOutlined } from "@ant-design/icons";
 import { spContext } from "../../App";
 import {
   getMilestonesByProjectID,
-  getModulesByMilestoneID,
   getProjectByID,
 } from "./DetailsPageServices";
 import CreateModuleModal from "./CreateModuleModal";
@@ -50,19 +49,11 @@ interface IMilestone {
   BurnedAmount: number;
 }
 
-interface IModule {
-  Id: number;
-  Title: string;
-  ModuleAmount: number;
-}
-
 // Main component to fetch project details
 const ProjectDetails: React.FC = () => {
   const [project, setProject] = useState<IProject | null>(null);
   const [milestones, setMilestones] = useState<IMilestone[]>([]);
-  const [modulesByMilestone, setModulesByMilestone] = useState<
-    Record<number, IModule[]>
-  >({});
+
   const [loading, setLoading] = useState(true);
   const { sp } = useContext(spContext);
   const [trigger, setTrigger] = useState(false);
@@ -108,23 +99,23 @@ const ProjectDetails: React.FC = () => {
 
         console.log("-------milestonesData------", milestonesData);
 
-        const modulesMap: Record<number, IModule[]> = {};
-        for (const milestone of milestonesData) {
-          const milestoneModules = await getModulesByMilestoneID(
-            sp,
-            "M_Modules",
-            milestone.Id
-          );
-          modulesMap[milestone.Id] = milestoneModules
-            ? milestoneModules.map((m: any) => ({
-                Title: m.Title,
-                ModuleAmount: m.ModuleAmount,
-                Id: m.Id,
-              }))
-            : [];
-        }
-        setModulesByMilestone(modulesMap);
-        console.log("🎨 All modules by milestone:", modulesMap);
+        // const modulesMap: Record<number, IModule[]> = {};
+        // for (const milestone of milestonesData) {
+        //   const milestoneModules = await getModulesByMilestoneID(
+        //     sp,
+        //     "M_Modules",
+        //     milestone.Id
+        //   );
+        //   modulesMap[milestone.Id] = milestoneModules
+        //     ? milestoneModules.map((m: any) => ({
+        //         Title: m.Title,
+        //         ModuleAmount: m.ModuleAmount,
+        //         Id: m.Id,
+        //       }))
+        //     : [];
+        // }
+        // setModulesByMilestone(modulesMap);
+        // console.log("🎨 All modules by milestone:", modulesMap);
       } catch (error: any) {
         console.error("❌ Error fetching milestones/modules:", error);
       }
@@ -140,7 +131,6 @@ const ProjectDetails: React.FC = () => {
     <DetailsPage
       project={project}
       milestones={milestones}
-      modulesByMilestone={modulesByMilestone}
       setTrigger={setTrigger}
     />
   );
@@ -150,9 +140,8 @@ const ProjectDetails: React.FC = () => {
 const DetailsPage: React.FC<{
   project: IProject | null;
   milestones: IMilestone[];
-  modulesByMilestone: Record<number, IModule[]>;
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ project, milestones, modulesByMilestone, setTrigger }) => {
+}> = ({ project, milestones, setTrigger }) => {
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<
@@ -234,22 +223,48 @@ const DetailsPage: React.FC<{
     setSelectedMilestoneData(null);
   };
 
-  
+
   const handleModuleCreated = () => console.log("Module created successfully");
   const handleMilestoneCreated = () =>
     console.log("Milestone created successfully");
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
 
-const totalBurned = milestones.reduce(
-  (sum, m) => sum + (m.BurnedAmount || 0),
-  0
-);
+const totalBurned = React.useMemo(() => {
+  if (!milestones || milestones.length === 0) return 0;
+  return milestones.reduce((sum, m) => sum + (m.BurnedAmount || 0), 0);
+}, [milestones]);
 
 const projectBenefit =
   project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
-  console.log("-------totalBurned------", totalBurned);
-  console.log("-------projectBenefit------", projectBenefit);
+
+console.log("-------totalBurned------", totalBurned);
+console.log("-------projectBenefit------", projectBenefit);
+
+// --- Store ProjectBenefit to SharePoint automatically ---
+useEffect(() => {
+  const updateProjectBenefit = async () => {
+    if (!sp || !project?.Id || projectBenefit == null) return;
+    if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
+
+    try {
+      console.log("💾 Updating ProjectBenefit in SharePoint:", projectBenefit);
+
+      await sp.web.lists
+        .getByTitle("Project Details")
+        .items.getById(project.Id)
+        .update({
+          ProjectBenefit: projectBenefit,
+        });
+
+      console.log("✅ ProjectBenefit updated successfully!");
+    } catch (error) {
+      console.error("❌ Error updating ProjectBenefit:", error);
+    }
+  };
+
+  updateProjectBenefit();
+}, [sp, project?.Id, milestones, projectBenefit]);
 
   const handleExcelUpload = async (
     event: React.ChangeEvent<HTMLInputElement>

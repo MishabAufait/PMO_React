@@ -234,65 +234,60 @@ const DetailsPage: React.FC<{
     setSelectedMilestoneData(null);
   };
 
-
+  
   const handleModuleCreated = () => console.log("Module created successfully");
   const handleMilestoneCreated = () =>
     console.log("Milestone created successfully");
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
 
-const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  if (!event.target.files || event.target.files.length === 0) return;
-
-  const file = event.target.files[0];
-
-  try {
-    if (!sp) {
-      console.error("❌ SP context not available");
-      return;
-    }
-
-    console.log("📂 Uploading file:", file.name);
-
-    const libraryName = "BurntAmountSummary"; // ✅ your library
-
-    // Upload file
-    const uploadedFile = await sp.web
-      .getFolderByServerRelativePath(libraryName)
-      .files.addUsingPath(file.name, file, { Overwrite: true });
-
-    console.log("✅ File uploaded successfully:", uploadedFile);
-    alert(`File "${file.name}" uploaded successfully!`);
-
-    // Fetch item explicitly using ServerRelativeUrl
-    const fileItem = await sp.web
-      .getFileByServerRelativePath(uploadedFile.data.ServerRelativeUrl)
-      .getItem();
-
-    console.log("📄 File item details:", fileItem);
-    alert(`File "${file.name}" uploaded successfully!`);
-  } catch (error) {
-  } finally {
-    event.target.value = ""; // reset input
-  }
-};
-
-const totalBurnedAmount = milestones.reduce(
-  (sum, milestone) => sum + (milestone.BurnedAmount || 0),
+const totalBurned = milestones.reduce(
+  (sum, m) => sum + (m.BurnedAmount || 0),
   0
 );
 
-// Helper function to calculate project benefit
-const calculateProjectBenefit = (
-  projectCost?: number,
-  burnedAmount?: number
-): number | null => {
-  if (projectCost == null || burnedAmount == null) return null;
-  return projectCost - burnedAmount;
-};
+const projectBenefit =
+  project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
+  console.log("-------totalBurned------", totalBurned);
+  console.log("-------projectBenefit------", projectBenefit);
 
-// Calculate benefit
-const projectBenefit = calculateProjectBenefit(project?.ProjectCost, totalBurnedAmount);
+  const handleExcelUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+
+    try {
+      if (!sp) {
+        console.error("❌ SP context not available");
+        return;
+      }
+
+      console.log("📂 Uploading file:", file.name);
+
+      const libraryName = "BurntAmountSummary"; // ✅ your library
+
+      // Upload file
+      const uploadedFile = await sp.web
+        .getFolderByServerRelativePath(libraryName)
+        .files.addUsingPath(file.name, file, { Overwrite: true });
+
+      console.log("✅ File uploaded successfully:", uploadedFile);
+      alert(`File "${file.name}" uploaded successfully!`);
+
+      // Fetch item explicitly using ServerRelativeUrl
+      const fileItem = await sp.web
+        .getFileByServerRelativePath(uploadedFile.data.ServerRelativeUrl)
+        .getItem();
+
+      console.log("📄 File item details:", fileItem);
+      alert(`File "${file.name}" uploaded successfully!`);
+    } catch (error) {
+    } finally {
+      event.target.value = ""; // reset input
+    }
+  };
 
   return (
     <div className={styles.detailsPage}>
@@ -497,14 +492,14 @@ const projectBenefit = calculateProjectBenefit(project?.ProjectCost, totalBurned
                           {formatAmount(milestone.Amount, milestone.Currency)}
                         </div>
                       </div>
-                      <div className={styles.detailColumn}>
+                      {/* <div className={styles.detailColumn}>
                         <div className={styles.detailLabel}>Due date</div>
                         <div className={styles.detailValue}>
                           {dayjs(milestone.MilestoneDueDate).format(
                             "DD/MM/YYYY"
                           )}
                         </div>
-                      </div>
+                      </div> */}
                       <div className={styles.detailColumn}>
                         <div className={styles.detailLabel}>
                           Milestone target date

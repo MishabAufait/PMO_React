@@ -116,7 +116,7 @@ const WeeklyMilestone: React.FC = () => {
 
     setMilestoneOptions(
       milestones
-        ?.filter((m) => m.Status !== "Completed") // 👈 exclude completed ones
+        ?.filter((m) => m.MilestoneStatus !== "Completed") // 👈 exclude completed ones
         .map((m) => ({
           value: m.Id,
           label: m.Milestone,

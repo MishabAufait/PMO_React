@@ -98,7 +98,7 @@ export default function CreateMilestoneModal({
         "MilestoneTargetDate",
         "Status",
         "MilestonePercentage",
-        "BurnedAmount",
+        // "BurnedAmount",
       ]);
 
       // ✅ Set ProjectCurrency as default for new milestone
@@ -142,10 +142,10 @@ export default function CreateMilestoneModal({
         ProjectName: ProjectName?.toString(),
         ProjectId: ProjectId?.toString(),
         Created: new Date().toISOString(),
-        InvoiceNo: "", // Add empty InvoiceNo field as it's in the interface
-        BurnedAmount: values.BurnedAmount
-          ? values.BurnedAmount.toString()
-          : "0",
+        InvoiceNo: "",
+        // BurnedAmount: values.BurnedAmount
+        //   ? values.BurnedAmount.toString()
+        //   : "0",
         MilestoneCompletionDate: completionDate,
       };
 
@@ -301,7 +301,7 @@ export default function CreateMilestoneModal({
         </Form.Item>
 
         {/* ✅ Conditionally render Burned Amount */}
-        {status === "Completed" && (
+        {/* {status === "Completed" && (
           <Form.Item label="Burned Amount" required>
             <div style={{ display: "flex", gap: "8px", width: "100%" }}>
               <Form.Item
@@ -336,7 +336,7 @@ export default function CreateMilestoneModal({
               </Form.Item>
             </div>
           </Form.Item>
-        )}
+        )} */}
       </Form>
     </Drawer>
   );

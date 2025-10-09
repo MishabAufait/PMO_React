@@ -68,7 +68,6 @@ const ProjectDetails: React.FC = () => {
   const [trigger, setTrigger] = useState(false);
   const { projectId } = useParams();
 
-
   useEffect(() => {
     if (!sp || !projectId) {
       console.log("❌ SP or projectId not available:", {
@@ -161,6 +160,8 @@ const DetailsPage: React.FC<{
   >();
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const { sp } = useContext(spContext);
+
 
   // Helper fn for amount formatting
   const formatAmount = (value?: number, currency?: string) => {
@@ -233,22 +234,65 @@ const DetailsPage: React.FC<{
     setSelectedMilestoneData(null);
   };
 
-    // Calculate total burned amount across milestones
-  const totalBurned = milestones.reduce(
-    (sum, m) => sum + (m.BurnedAmount || 0),
-    0
-  );
-
-  // Calculate benefit only if project and cost exist
-  const projectBenefit =
-    project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
-
 
   const handleModuleCreated = () => console.log("Module created successfully");
   const handleMilestoneCreated = () =>
     console.log("Milestone created successfully");
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
+
+const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  if (!event.target.files || event.target.files.length === 0) return;
+
+  const file = event.target.files[0];
+
+  try {
+    if (!sp) {
+      console.error("❌ SP context not available");
+      return;
+    }
+
+    console.log("📂 Uploading file:", file.name);
+
+    const libraryName = "BurntAmountSummary"; // ✅ your library
+
+    // Upload file
+    const uploadedFile = await sp.web
+      .getFolderByServerRelativePath(libraryName)
+      .files.addUsingPath(file.name, file, { Overwrite: true });
+
+    console.log("✅ File uploaded successfully:", uploadedFile);
+    alert(`File "${file.name}" uploaded successfully!`);
+
+    // Fetch item explicitly using ServerRelativeUrl
+    const fileItem = await sp.web
+      .getFileByServerRelativePath(uploadedFile.data.ServerRelativeUrl)
+      .getItem();
+
+    console.log("📄 File item details:", fileItem);
+    alert(`File "${file.name}" uploaded successfully!`);
+  } catch (error) {
+  } finally {
+    event.target.value = ""; // reset input
+  }
+};
+
+const totalBurnedAmount = milestones.reduce(
+  (sum, milestone) => sum + (milestone.BurnedAmount || 0),
+  0
+);
+
+// Helper function to calculate project benefit
+const calculateProjectBenefit = (
+  projectCost?: number,
+  burnedAmount?: number
+): number | null => {
+  if (projectCost == null || burnedAmount == null) return null;
+  return projectCost - burnedAmount;
+};
+
+// Calculate benefit
+const projectBenefit = calculateProjectBenefit(project?.ProjectCost, totalBurnedAmount);
 
   return (
     <div className={styles.detailsPage}>
@@ -335,6 +379,32 @@ const DetailsPage: React.FC<{
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Excel Upload Section */}
+      <div className={styles.excelUploadSection}>
+        <Card className={styles.excelUploadCard}>
+          <div className={styles.excelUploadContainer}>
+            <div className={styles.excelLabel}>Upload Burned Amount Excel</div>
+            <div className={styles.uploadButtonWrapper}>
+              <Button
+                type="primary"
+                onClick={() =>
+                  document.getElementById("excelUploadInput")?.click()
+                }
+              >
+                Upload Excel
+              </Button>
+              <input
+                id="excelUploadInput"
+                type="file"
+                accept=".xlsx,.xls"
+                style={{ display: "none" }}
+                onChange={handleExcelUpload}
+              />
             </div>
           </div>
         </Card>
@@ -461,7 +531,7 @@ const DetailsPage: React.FC<{
                           Completed: {milestone.MilestonePercentage}%
                         </Tag>
                       </div>
-                      <div className={styles.detailColumn}>
+                      {/* <div className={styles.detailColumn}>
                         <div className={styles.detailLabel}>Burned Amount</div>
                         <div className={styles.detailValue}>
                           {formatAmount(
@@ -469,7 +539,7 @@ const DetailsPage: React.FC<{
                             milestone.Currency
                           )}
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>

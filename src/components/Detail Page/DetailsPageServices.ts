@@ -97,7 +97,9 @@ export const getProjectByID = async (
         "ProjectType",
         "ProjectManager/Id",
         "ProjectManager/Title",
-        "ProjectManager/EMail"
+        "ProjectManager/EMail",
+        "BurnedAmount",
+        "ProjectBenefit",
       )
       .expand("ProjectManager")
       .top(1)();
@@ -148,8 +150,7 @@ export const getMilestonesByProjectID = async (
         "MilestoneStatus",
         "MilestonePercentage",
         "MilestoneDescription",
-        "BurnedAmount",
-        "Currency"
+        "Currency",
       )();
     return milestone;
   } catch (error) {

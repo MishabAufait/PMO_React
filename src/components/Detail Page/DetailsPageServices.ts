@@ -121,7 +121,9 @@ export const getProjectByID = async (
       ProjectCost: project.ProjectCost,
       Currency: project.Currency,
       ProjectType: project.ProjectType,
-      projectOwner: projectOwner,  // ✅ Returns full object with Id, Title, EMail
+      projectOwner: projectOwner,
+      ProjectBenefit: project.ProjectBenefit,
+      BurnedAmount: project.BurnedAmount,
     };
   } catch (err) {
     console.error("❌ Error in getProjectByID service:", err);

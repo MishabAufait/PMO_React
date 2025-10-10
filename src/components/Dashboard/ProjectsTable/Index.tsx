@@ -77,7 +77,7 @@ interface MappedProject {
     Complexity: string;
     InvoiceNo?: string;
     InvoiceDate?: string;
-    ProjectManager: any;
+    ProjectManager: string;
   };
 }
 
@@ -259,8 +259,8 @@ export default function ProjectsTable({
         const items: any[] = await sp.web.lists
           .getByTitle("Project Details")
           .items.select("ProjectManager/Title", "ProjectManager/EMail", "ProjectManager/ID")
-          .expand("ProjectManager")
-          .get();
+          .expand("ProjectManager")();
+        console.log("Fetched project managers:", items);
 
         // Extract unique names
         const uniqueOwners: string[] = Array.from(
@@ -303,12 +303,7 @@ export default function ProjectsTable({
       const milestoneStatus = project?.milestoneStatus ?? "";
       const owner =
         typeof project.originalData?.ProjectManager === "string"
-          ? project.originalData.ProjectManager
-          : project.originalData?.ProjectManager?.Title ||
-            project.originalData?.ProjectManager?.Name ||
-            project.originalData?.ProjectManager?.Email ||
-            "";
-
+          ? project.originalData.ProjectManager : "";
       const matchesSearch = name
         .toLowerCase()
         .includes(searchText.toLowerCase());

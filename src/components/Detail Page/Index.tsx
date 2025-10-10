@@ -28,6 +28,8 @@ interface IProject {
   Status?: string;
   Priority?: string;
   ProjectCost?: number;
+  ProjectBenefit: number;
+  BurnedAmount: number;
   Currency?: string;
   InvoiceNo?: string;
   InvoiceDate?: string;
@@ -239,14 +241,20 @@ const DetailsPage: React.FC<{
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
 
+<<<<<<< Updated upstream
   const totalBurned = React.useMemo(() => {
     if (!milestones || milestones.length === 0) return 0;
     return milestones.reduce((sum, m) => sum + (m.BurnedAmount || 0), 0);
   }, [milestones]);
+=======
+// Use BurnedAmount directly from project details
+const totalBurned = project?.BurnedAmount ?? 0;
+>>>>>>> Stashed changes
 
   const projectBenefit =
     project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
 
+<<<<<<< Updated upstream
   console.log("-------totalBurned------", totalBurned);
   console.log("-------projectBenefit------", projectBenefit);
 
@@ -255,6 +263,17 @@ const DetailsPage: React.FC<{
     const updateProjectBenefit = async () => {
       if (!sp || !project?.Id || projectBenefit == null) return;
       if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
+=======
+console.log("-------totalBurned (from ProjectDetails)------", totalBurned);
+console.log("-------projectBenefit------", projectBenefit);
+
+
+// --- Store ProjectBenefit to SharePoint automatically ---
+useEffect(() => {
+  const updateProjectBenefit = async () => {
+    if (!sp || !project?.Id || projectBenefit == null) return;
+    if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
+>>>>>>> Stashed changes
 
       try {
         console.log("💾 Updating ProjectBenefit in SharePoint:", projectBenefit);

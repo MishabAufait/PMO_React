@@ -7,7 +7,7 @@ import {
   Bar,
   XAxis,
   YAxis,
-  // Tooltip,
+  Tooltip,
   LabelList,
   CartesianGrid,
   ReferenceLine,
@@ -55,7 +55,7 @@ const renderValueLabel = (props: any) => {
     value > 0
       ? y - 6 // Above red bar
       : value < 0
-      ? y + height -6  // Below green bar (height is negative, so we use abs and add offset)
+      ? y + height - 6 // Below green bar (height is negative, so we use abs and add offset)
       : y - 6; // Above blue bar (on-time)
 
   return (
@@ -122,6 +122,33 @@ export default function MilestoneDelayChart({
     ticks.push(i);
   }
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      // Replace newline (\n) with <br /> for line breaks in HTML
+      const formattedLabel = label.replace(/\n/g, "<br />");
+
+      return (
+        <div
+          style={{
+            background: "white",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            padding: "6px 10px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            maxWidth: 250,
+          }}
+        >
+          <div
+            style={{ fontWeight: 600, marginBottom: 4 }}
+            dangerouslySetInnerHTML={{ __html: formattedLabel }}
+          />
+          <div style={{ color: "#ef4444" }}>Delay: {payload[0].value} days</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card
       title="Milestone Tracking"
@@ -165,16 +192,14 @@ export default function MilestoneDelayChart({
               }}
             />
 
-            {/* <Tooltip
-              formatter={(value: any) => [`${value} days`, "Delay"]}
-              labelFormatter={(label) => `${label}`}
-            /> */}
+            <Tooltip content={<CustomTooltip />} />
 
             <Bar
               dataKey="delay"
-              isAnimationActive={false}
+              isAnimationActive={true}
               barSize={24}
               fillOpacity={1}
+              background={{ fill: "transparent" }}
             >
               <LabelList content={renderValueLabel} />
             </Bar>

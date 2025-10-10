@@ -1,6 +1,6 @@
 // MilestoneDelayChart.tsx
-import React, { useMemo } from "react";
-import { Card } from "antd";
+import React, { useMemo, useState } from "react";
+import { Card, DatePicker } from "antd";
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from "recharts";
+import dayjs, { Dayjs } from "dayjs";
 
 // ---------------------------
 // Types
@@ -21,6 +22,7 @@ export interface MilestoneChartItem {
   ProjectId: string | number;
   ProjectName: string;
   Milestone: string;
+  MilestoneCreatedDate: string;
   MilestoneDueDate: string; // due date from backend
   MilestoneTargetDate?: string; // planned/actual completion date
   MilestoneStatus?: string; // Pending / In Progress / Completed
@@ -33,8 +35,8 @@ export interface MilestoneChartItem {
 function calculateDelayDays(due?: string, actual?: string): number {
   if (!due) return 0;
   const actualDate = actual || due;
-  const dueTs = new Date(due).setHours(0, 0, 0, 0);
-  const actualTs = new Date(actualDate).setHours(0, 0, 0, 0);
+  const dueTs = dayjs(due).startOf('day').valueOf();
+  const actualTs = dayjs(actualDate).startOf('day').valueOf();
   const diffMs = actualTs - dueTs;
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
@@ -55,8 +57,8 @@ const renderValueLabel = (props: any) => {
     value > 0
       ? y - 6 // Above red bar
       : value < 0
-      ? y + height - 6 // Below green bar (height is negative, so we use abs and add offset)
-      : y - 6; // Above blue bar (on-time)
+        ? y + height - 6 // Below green bar (height is negative, so we use abs and add offset)
+        : y - 6; // Above blue bar (on-time)
 
   return (
     <text
@@ -71,6 +73,30 @@ const renderValueLabel = (props: any) => {
     </text>
   );
 };
+
+// Custom tick component to truncate labels
+const CustomXAxisTick = (props: any) => {
+  const { x, y, payload } = props;
+  const text = payload.value;
+  const truncated = text.length > 20 ? text.substring(0, 20) + '...' : text;
+  
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        fill="#666"
+        fontSize={10}
+        transform="rotate(-40)"
+      >
+        {truncated}
+      </text>
+    </g>
+  );
+};
+
 // ---------------------------
 // Component
 // ---------------------------
@@ -81,10 +107,27 @@ export default function MilestoneDelayChart({
   milestones?: MilestoneChartItem[];
   height?: number;
 }) {
-  // transform milestones into chart data
+
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
+
+  // Filter milestones by selected month-year based on MilestoneCreatedDate
+  const filteredMilestones = useMemo(() => {
+    if (!selectedMonth) return milestones;
+
+    return milestones.filter((m) => {
+      const date = m.MilestoneCreatedDate;
+      if (!date) return false;
+      const mDayjs = dayjs(date);
+      return (
+        mDayjs.month() === selectedMonth.month() &&
+        mDayjs.year() === selectedMonth.year()
+      );
+    });
+  }, [milestones, selectedMonth]);
+
   // transform milestones into chart data
   const data = useMemo(() => {
-    return milestones.map((m, idx) => {
+    return filteredMilestones.map((m, idx) => {
       const projectLabel = m.ProjectName || `Project-${idx + 1}`;
       const milestoneLabel = m.Milestone || `M-${idx + 1}`;
       const combinedLabel = `${projectLabel}\n${milestoneLabel}`;
@@ -108,7 +151,7 @@ export default function MilestoneDelayChart({
         fill: getBarColor(delay),
       };
     });
-  }, [milestones]);
+  }, [filteredMilestones]);
 
   // Compute max absolute delay
   const maxAbs = Math.max(5, ...data.map((d) => Math.abs(d.delay)));
@@ -153,6 +196,14 @@ export default function MilestoneDelayChart({
     <Card
       title="Milestone Tracking"
       style={{ borderRadius: 10, height: "440px" }}
+      extra={
+        <DatePicker
+          picker="month"
+          value={selectedMonth}
+          onChange={(date) => setSelectedMonth(date)}
+          allowClear
+        />
+      }
     >
       <div className="main-div" style={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -176,7 +227,7 @@ export default function MilestoneDelayChart({
               textAnchor="end"
               interval={0}
               height={60}
-              tick={{ fontSize: 10 }}
+              tick={<CustomXAxisTick />}
             />
 
             <YAxis

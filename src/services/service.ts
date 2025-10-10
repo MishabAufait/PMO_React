@@ -19,8 +19,8 @@ export const getAllMilestones = async (sp: SPFI, libraryName: string) => {
       .getByTitle(libraryName)
       .items
       .select(
-        "Id", "Title", "Milestone", "ProjectName", 
-        "MilestoneDueDate", "InvoiceNo", "Amount", "Currency", 
+        "Id", "Title", "Milestone", "ProjectName",
+        "MilestoneDueDate", "InvoiceNo", "Amount", "Currency",
         "MilestoneTargetDate", "MilestoneStatus", "MilestonePercentage", "MilestoneCompletionDate"
       )
       .orderBy("Id", false)(); // latest first
@@ -37,11 +37,11 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
       .getByTitle(libraryName)
       .items
       .select(
-        "Id","ProjectName","ProjectId","ProjectStartDate",
-        "ProjectEndDate","Status","ProjectCost","Currency",
-        "CompanyName","Phase","Region",
-        "ProjectType","Department","Complexity","InvoiceNo","InvoiceDate",
-        "ProjectManager/Id","ProjectManager/Title","ProjectManager/EMail"
+        "Id", "ProjectName", "ProjectId", "ProjectStartDate",
+        "ProjectEndDate", "Status", "ProjectCost", "Currency",
+        "CompanyName", "Phase", "Region",
+        "ProjectType", "Department", "Complexity", "InvoiceNo", "InvoiceDate",
+        "ProjectManager/Id", "ProjectManager/Title", "ProjectManager/EMail"
       )
       .expand("ProjectManager") // expand person field
       .orderBy("Id", false)();
@@ -56,19 +56,38 @@ export const getAllProjects = async (sp: SPFI, libraryName: string) => {
 
 export const getMilestonesByProjectID = async (sp: SPFI, libraryName: string, projectId: number) => {
   try {
-    const milestone = await sp.web.lists
+    const milestones = await sp.web.lists
       .getByTitle(libraryName)
       .items
       .filter(`ProjectId eq '${projectId}'`)
       .select(
-        "Id","Title","Milestone","ProjectName","ProjectId",
-        "MilestoneDueDate","InvoiceNo","Amount","Currency","ModuleAmount",
-        "MilestoneTargetDate","MilestoneStatus","MilestonePercentage","MilestoneCompletionDate"
+        "Id",
+        "Title",
+        "Milestone",
+        "ProjectName",
+        "ProjectId",
+        "MilestoneDueDate",
+        "InvoiceNo",
+        "Amount",
+        "Currency",
+        "ModuleAmount",
+        "Created",
+        "MilestoneTargetDate",
+        "MilestoneStatus",
+        "MilestonePercentage",
+        "MilestoneCompletionDate"
       )();
-    return milestone;
+
+    const formattedMilestones = milestones.map(item => ({
+      ...item,
+      MilestoneCreatedDate: item.Created // assign system Created date to your custom property
+    }));
+
+    return formattedMilestones;
+
   } catch (error) {
     console.error("❌ Error in getMilestoneByProjectID service:", error);
-    throw error;        
+    throw error;
   }
 };
 

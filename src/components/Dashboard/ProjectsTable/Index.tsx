@@ -31,6 +31,13 @@ import { useNavigate } from "react-router-dom";
 import { deleteProject } from "../../../services/service";
 import { spContext } from "../../../App";
 import { Project } from "../Index";
+import dayjs, { Dayjs } from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
 
 const { Option } = Select;
 
@@ -225,6 +232,12 @@ const mapProjectData = (
   });
 };
 
+type Owner = {
+  Email: string;
+  ID: string;
+  Title: string;
+};
+
 export default function ProjectsTable({
   projects,
   milestonesMap,
@@ -239,17 +252,25 @@ export default function ProjectsTable({
   const [editDrawerVisible, setEditDrawerVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [filters, setFilters] = useState({
-    status: "",
-    milestoneStatus: "",
-    amountRange: { min: null, max: null },
-    dateRange: null,
-    projectManager: "",
-  });
+  const [filters, setFilters] = useState<{
+  status: string;
+  milestoneStatus: string;
+  amountRange: { min: number | null; max: number | null };
+  dateRange: Dayjs[] | null;
+  projectManager: string;
+}>({
+  status: "",
+  milestoneStatus: "",
+  amountRange: { min: null, max: null },
+  dateRange: null,
+  projectManager: "",
+});
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { sp } = React.useContext(spContext);
-  const [owners, setOwners] = useState<string[]>([]);
+  const [owners, setOwners] = useState<
+    { Email: string; ID: string; Title: string }[]
+  >([]);
   const [ownersLoading, setOwnersLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -258,20 +279,35 @@ export default function ProjectsTable({
       try {
         const items: any[] = await sp.web.lists
           .getByTitle("Project Details")
-          .items.select("ProjectManager/Title", "ProjectManager/EMail", "ProjectManager/ID")
+          .items.select(
+            "ProjectManager/Title",
+            "ProjectManager/EMail",
+            "ProjectManager/ID"
+          )
           .expand("ProjectManager")();
+
         console.log("Fetched project managers:", items);
 
-        // Extract unique names
-        const uniqueOwners: string[] = Array.from(
-          new Set(
-            items
-              .map((i) => i.ProjectManager?.Title)
-              .filter((n: string | undefined): n is string => !!n)
-          )
+        // Extract ProjectManager objects (some items may not have one)
+        const managers = items
+          .map((item) => item.ProjectManager)
+          .filter((pm) => pm && pm.Title); // ensure it's valid
+
+        // Remove duplicates based on Title (or ID for more reliability)
+        const uniqueManagers: Owner[] = Array.from(
+          new Map(
+            managers.map((manager) => [
+              manager.ID, // key for uniqueness
+              {
+                Email: manager.EMail, // map to your desired property
+                ID: manager.ID,
+                Title: manager.Title,
+              },
+            ])
+          ).values()
         );
 
-        setOwners(uniqueOwners);
+        setOwners(uniqueManagers);
       } catch (error) {
         console.error("Error fetching project managers:", error);
         setOwners([]);
@@ -296,30 +332,51 @@ export default function ProjectsTable({
   console.log("selectedProject", selectedProject);
 
   // Filter projects based on search and filters
-  const filteredProjects = useMemo(() => {
-    return projectData.filter((project) => {
-      const name = project?.name ?? "";
-      const status = project?.status ?? "";
-      const milestoneStatus = project?.milestoneStatus ?? "";
-      const owner =
-        typeof project.originalData?.ProjectManager === "string"
-          ? project.originalData.ProjectManager : "";
-      const matchesSearch = name
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-      const matchesStatus =
-        !filters.status ||
-        status.toLowerCase() === filters.status.toLowerCase();
-      const matchesMilestone =
-        !filters.milestoneStatus ||
-        milestoneStatus.toLowerCase() === filters.milestoneStatus.toLowerCase();
-      const matchesOwner =
-        !filters.projectManager ||
-        owner.toLowerCase().includes(filters.projectManager.toLowerCase());
+  // Filtered projects using useMemo
+const filteredProjects = useMemo(() => {
+  const start: Dayjs | undefined = filters.dateRange?.[0];
+  const end: Dayjs | undefined = filters.dateRange?.[1];
 
-      return matchesSearch && matchesStatus && matchesMilestone && matchesOwner;
-    });
-  }, [searchText, filters, projectData]);
+  return projectData.filter((project) => {
+    const name = project?.name ?? "";
+    const status = project?.status ?? "";
+    const milestoneStatus = project?.milestoneStatus ?? "";
+    const owner = project?.projectManager ?? "";
+    const projectCost = project.originalData.ProjectCost;
+
+    const matchesSearch = name.toLowerCase().includes(searchText.toLowerCase());
+    const matchesStatus =
+      !filters.status || status.toLowerCase() === filters.status.toLowerCase();
+    const matchesMilestone =
+      !filters.milestoneStatus ||
+      milestoneStatus.toLowerCase() === filters.milestoneStatus.toLowerCase();
+    const matchesOwner =
+      !filters.projectManager ||
+      owner.toLowerCase().includes(filters.projectManager.toLowerCase());
+    const matchesAmount =
+      (!filters.amountRange.min || projectCost >= filters.amountRange.min) &&
+      (!filters.amountRange.max || projectCost <= filters.amountRange.max);
+
+    const projectStart = dayjs(project.originalData.ProjectStartDate);
+    const projectEnd = dayjs(project.originalData.ProjectEndDate || project.originalData.ProjectStartDate);
+
+    const matchesDate =
+      !start ||
+      !end ||
+      (projectStart.isSameOrAfter(start, "day") &&
+        projectEnd.isSameOrBefore(end, "day"));
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesMilestone &&
+      matchesOwner &&
+      matchesAmount &&
+      matchesDate
+    );
+  });
+}, [searchText, filters, projectData]);
+
 
   const handleFilterApply = (values: any) => {
     setFilters({
@@ -663,8 +720,8 @@ export default function ProjectsTable({
               }
             >
               {owners.map((owner) => (
-                <Option key={owner} value={owner} label={owner}>
-                  {owner}
+                <Option key={owner.ID} value={owner.Title} label={owner.Title}>
+                  {owner.Title}
                 </Option>
               ))}
             </Select>

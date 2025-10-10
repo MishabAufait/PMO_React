@@ -134,3 +134,127 @@ export const deleteProject = async (sp: SPFI, listName: string, itemId: number) 
     return { success: false, error };
   }
 };
+
+// Fetch all progression history, sum burned amounts per project, and update ProjectDetails
+// export const processAndUpdateBurnedAmounts = async (sp: SPFI) => {
+//   try {
+//     // 1️⃣ Fetch all items from ProgressionHistory
+//     const items: any[] = await sp.web.lists.getByTitle("ProgressionHistory").items
+//       .select("ProjectId", "BurnedAmount")
+//       .top(5000)(); // use .top(5000) to fetch max in one go
+
+//     console.log("📊 Raw progression history:", items);
+
+//     // 2️⃣ Group and sum BurnedAmount by ProjectId
+//     const projectSums: Record<string, number> = {};
+
+//     for (const item of items) {
+//       const projectId = item.ProjectId;
+//       const burned = parseFloat(item.BurnedAmount) || 0;
+
+//       if (!projectId) continue; // Skip if no ProjectId
+
+//       if (!projectSums[projectId]) {
+//         projectSums[projectId] = burned;
+//       } else {
+//         projectSums[projectId] += burned;
+//       }
+//     }
+
+//     console.log("🔥 Summed burned amounts by ProjectId:", projectSums);
+
+//     // 3️⃣ Update each ProjectId in ProjectDetails list
+//     const updatePromises = Object.entries(projectSums).map(async ([projectId, totalBurned]) => {
+//       try {
+//         // Try to find the ProjectDetails item by ProjectId
+//         const projectItems = await sp.web.lists
+//           .getByTitle("Project Details")
+//           .items.filter(`ProjectId eq '${projectId}'`)
+//           .select("Id")();
+
+//         if (projectItems.length > 0) {
+//           const projectItemId = projectItems[0].Id;
+
+//           console.log(`🔄 Updating ProjectId ${projectId} (Item ID: ${projectItemId}) with total burned ${totalBurned}`);
+
+//           await updateProject(sp, "Project Details", projectItemId, {
+//             BurnedAmount: totalBurned,
+//           });
+//         } else {
+//           console.warn(`⚠️ No ProjectDetails found for ProjectId ${projectId}`);
+//         }
+//       } catch (err) {
+//         console.error(`❌ Error updating ProjectId ${projectId}:`, err);
+//       }
+//     });
+
+//     // Wait for all updates to complete
+//     await Promise.all(updatePromises);
+
+//     console.log("✅ All project updates completed.");
+
+//   } catch (error) {
+//     console.error("❌ Error processing burned amounts:", error);
+//   }
+// };
+
+export const processAndUpdateBurnedAmounts = async (sp: SPFI) => {
+  try {
+    // 1️⃣ Fetch all items from ProgressionHistory
+    const items: any[] = await sp.web.lists
+      .getByTitle("ProgressionHistory")
+      .items.select("ProjectId", "BurnedAmount")
+      .top(5000)(); // Get max items per batch
+
+    console.log("📊 Raw progression history:", items);
+
+    // 2️⃣ Group and find MAX BurnedAmount by ProjectId
+    const projectMaxBurned: Record<string, number> = {};
+
+    for (const item of items) {
+      const projectId = item.ProjectId;
+      const burned = parseFloat(item.BurnedAmount) || 0;
+
+      if (!projectId) continue; // Skip invalid rows
+
+      if (!projectMaxBurned[projectId]) {
+        projectMaxBurned[projectId] = burned;
+      } else if (burned > projectMaxBurned[projectId]) {
+        projectMaxBurned[projectId] = burned; // Keep only the largest
+      }
+    }
+
+    console.log("🔥 Max burned amounts by ProjectId:", projectMaxBurned);
+
+    // 3️⃣ Update Project Details list
+    const updatePromises = Object.entries(projectMaxBurned).map(async ([projectId, maxBurned]) => {
+      try {
+        // Find the matching ProjectDetails item
+        const projectItems = await sp.web.lists
+          .getByTitle("Project Details")
+          .items.filter(`ProjectId eq '${projectId}'`)
+          .select("Id")();
+
+        if (projectItems.length > 0) {
+          const projectItemId = projectItems[0].Id;
+
+          console.log(`🔄 Updating ProjectId ${projectId} (Item ID: ${projectItemId}) with max burned ${maxBurned}`);
+
+          await updateProject(sp, "Project Details", projectItemId, {
+            BurnedAmount: maxBurned,
+          });
+        } else {
+          console.warn(`⚠️ No Project Details found for ProjectId ${projectId}`);
+        }
+      } catch (err) {
+        console.error(`❌ Error updating ProjectId ${projectId}:`, err);
+      }
+    });
+
+    await Promise.all(updatePromises);
+    console.log("✅ All project updates completed.");
+
+  } catch (error) {
+    console.error("❌ Error processing burned amounts:", error);
+  }
+};

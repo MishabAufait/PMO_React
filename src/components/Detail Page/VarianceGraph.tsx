@@ -57,7 +57,7 @@ export default function MilestoneVarianceChart({
         const point = groups[pid].find((g) => g.projectPercentage === perc);
         if (point) {
           // Calculate variance: (BurningAmount / projectCost) * projectPercentage
-          const variance = ((point.BurningAmount / projectCost) * point.projectPercentage).toFixed(2);
+          const variance = ((point.BurningAmount / projectCost) * point.projectPercentage).toFixed(4);
           row[pid] = parseFloat(variance);
         }
       });
@@ -69,6 +69,9 @@ export default function MilestoneVarianceChart({
       projectIds: Object.keys(groups)
     };
   }, [data, projectCost]);
+
+  console.log(processedData,"processedData")
+  console.log(projectCost,"projectCost")
 
   // Color palette for different projects
   const colors = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'];

@@ -14,6 +14,7 @@ import {
   getAllProjects,
   getMilestonesByProjectID,
   getMasterRespondersData,
+  processAndUpdateBurnedAmounts,
 } from "../../services/service";
 import MilestoneDelayChart from "./MilestoneChart/Index";
 
@@ -188,7 +189,10 @@ export default function ModernDashboard() {
 
   // Fetch on mount
   useEffect(() => {
-    if (sp) fetchDashboardData();
+    if(sp){
+      fetchDashboardData();
+      processAndUpdateBurnedAmounts(sp);
+    } 
   }, [sp]);
 
   return (

@@ -83,7 +83,7 @@ const ProjectDetails: React.FC = () => {
           "Project Details",
           Number(projectId)
         );
-        console.log(data.ProjectId,"iddddddddddddddddddddddddddddddddd")
+        console.log(data.ProjectId, "kk")
         const varianceData = await fetchProgressionHistory(sp, data.ProjectId || '');
         setVarianceData(varianceData);
         console.log(data, "project data id");
@@ -152,7 +152,7 @@ const DetailsPage: React.FC<{
   milestones: IMilestone[];
   varianceData: ProjectVarianceItem[];
   setTrigger: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ project, milestones, setTrigger,varianceData }) => {
+}> = ({ project, milestones, setTrigger, varianceData }) => {
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<
@@ -161,6 +161,8 @@ const DetailsPage: React.FC<{
   const [selectedMilestoneData, setSelectedMilestoneData] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const { sp } = useContext(spContext);
+  const [isPOUser, setIsPOUser] = useState(false);
+
 
 
   // Helper fn for amount formatting
@@ -241,21 +243,21 @@ const DetailsPage: React.FC<{
   const handleMilestoneEdited = () =>
     console.log("Milestone edited successfully");
 
-// Use BurnedAmount directly from project details
-const totalBurned = project?.BurnedAmount ?? 0;
+  // Use BurnedAmount directly from project details
+  const totalBurned = project?.BurnedAmount ?? 0;
 
   const projectBenefit =
     project?.ProjectCost != null ? project.ProjectCost - totalBurned : null;
 
-console.log("-------totalBurned (from ProjectDetails)------", totalBurned);
-console.log("-------projectBenefit------", projectBenefit);
+  console.log("-------totalBurned (from ProjectDetails)------", totalBurned);
+  console.log("-------projectBenefit------", projectBenefit);
 
 
-// --- Store ProjectBenefit to SharePoint automatically ---
-useEffect(() => {
-  const updateProjectBenefit = async () => {
-    if (!sp || !project?.Id || projectBenefit == null) return;
-    if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
+  // --- Store ProjectBenefit to SharePoint automatically ---
+  useEffect(() => {
+    const updateProjectBenefit = async () => {
+      if (!sp || !project?.Id || projectBenefit == null) return;
+      if (milestones.length === 0) return; // ✅ Wait until milestones are loaded
 
       try {
         console.log("💾 Updating ProjectBenefit in SharePoint:", projectBenefit);
@@ -313,6 +315,42 @@ useEffect(() => {
       event.target.value = ""; // reset input
     }
   };
+
+  useEffect(() => {
+    if (!sp) return;
+
+    const checkIfUserIsPO = async () => {
+      try {
+        // Get current user details
+        const currentUser = await sp.web.currentUser();
+        const userEmail = currentUser?.Email?.toLowerCase();
+        console.log("👤 Current user:", userEmail);
+
+        // Fetch all project owners (M_ProjectOwner list)
+        const projectOwners = await sp.web.lists
+          .getByTitle("M_ProjectOwner")
+          .items.select("PO/EMail")
+          .expand("PO")
+          .top(5000)();
+
+        // Flatten the PO emails
+        const poEmails = projectOwners
+          .map((item: any) => item.PO?.EMail?.toLowerCase())
+          .filter((email: string) => !!email);
+
+        // Check if current user exists among POs
+        const isUserPO = poEmails.includes(userEmail);
+        console.log("✅ Is PO User:", isUserPO);
+
+        setIsPOUser(isUserPO);
+      } catch (error) {
+        console.error("❌ Error checking PO user:", error);
+      }
+    };
+
+    checkIfUserIsPO();
+  }, [sp]);
+
 
   return (
     <div className={styles.detailsPage}>
@@ -404,33 +442,41 @@ useEffect(() => {
         </Card>
       </div>
 
-      {/* Excel Upload Section */}
-      <div className={styles.excelUploadSection}>
-        <Card className={styles.excelUploadCard}>
-          <div className={styles.excelUploadContainer}>
-            <div className={styles.excelLabel}>Upload Burned Amount Excel</div>
-            <div className={styles.uploadButtonWrapper}>
-              <Button
-                type="primary"
-                onClick={() =>
-                  document.getElementById("excelUploadInput")?.click()
-                }
-              >
-                Upload Excel
-              </Button>
-              <input
-                id="excelUploadInput"
-                type="file"
-                accept=".xlsx,.xls"
-                style={{ display: "none" }}
-                onChange={handleExcelUpload}
-              />
-            </div>
+      {isPOUser && (
+        <>
+          {/* Excel Upload Section */}
+          <div className={styles.excelUploadSection}>
+            <Card className={styles.excelUploadCard}>
+              <div className={styles.excelUploadContainer}>
+                <div className={styles.excelLabel}>Upload Burned Amount Excel</div>
+                <div className={styles.uploadButtonWrapper}>
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      document.getElementById("excelUploadInput")?.click()
+                    }
+                  >
+                    Upload Excel
+                  </Button>
+                  <input
+                    id="excelUploadInput"
+                    type="file"
+                    accept=".xlsx,.xls"
+                    style={{ display: "none" }}
+                    onChange={handleExcelUpload}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
 
-      <MilestoneVarianceChart data={varianceData} projectCost={project?.ProjectCost ?? 0} />
+          {/* Variance Graph */}
+          <MilestoneVarianceChart
+            data={varianceData}
+            projectCost={project?.ProjectCost ?? 0}
+          />
+        </>
+      )}
 
       {/* Milestone Progress Section */}
       <div className={styles.milestoneSection}>
